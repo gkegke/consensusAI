@@ -7,13 +7,17 @@ __pycache__/
 *.sqlite3
 
 # Environments
+.env
 env.py
 .venv/
+venv/
 
 # Django-specific
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
+staticfiles/
+media/
 
 # OS-specific
 .DS_Store
