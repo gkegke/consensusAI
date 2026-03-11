@@ -24,6 +24,11 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'cloudinary_storage', 
     'cloudinary',
+    
+    'core',
+    'users',
+    'questions',
+    'ai_engine',
     'home',
 ]
 
@@ -58,25 +63,21 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'consensus.wsgi.application'
 
-# Database Configuration
-if os.environ.get("DEVELOPMENT") == "True":
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
-    }
-    print("LOG: Using local SQLite")
-elif os.environ.get("DATABASE_URL"):
+# <critical importance="10/10">
+# Database Configuration: Strictly enforces PostgreSQL for Dev/Prod Parity.
+# Developer must provide a DATABASE_URL in the local environment.
+# E.g., postgres://myuser:mypassword@localhost:5432/consensus
+# </critical>
+if os.environ.get("DATABASE_URL"):
     DATABASES = {
         'default': dj_database_url.parse(os.environ.get("DATABASE_URL"))
     }
-    print("LOG: Using remote PostgreSQL")
+    print("LOG: Connected to PostgreSQL database.")
 else:
-    raise Exception("No Database configuration found!")
+    raise Exception("CRITICAL: No DATABASE_URL found! PostgreSQL is strictly required for local and production environments.")
+
 
 # Static & Media Files Modern Configuration
-# ------------------------------------------------------------------
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [BASE_DIR / 'static']
@@ -90,10 +91,40 @@ STORAGES = {
     },
 }
 
-# ------------------------------------------------------------------
-
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Logging Configuration
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'questions': {
+            'handlers': ['console'],
+            'level': 'DEBUG' if DEBUG else 'INFO',
+            'propagate': False,
+        },
+        'ai_engine': {
+            'handlers': ['console'],
+            'level': 'DEBUG' if DEBUG else 'INFO',
+            'propagate': False,
+        },
+    },
+}
