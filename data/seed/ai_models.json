@@ -1,0 +1,37 @@
+[
+    {
+        "api_identifier": "gemini/gemini-3.1-flash-lite-preview",
+        "name": "Gemini 3.1 Flash Lite Preview",
+        "developer": "Google",
+        "is_active": true,
+        "tags": ["fast", "low-reasoning", "non-open-source", "usa", "big-tech"]
+    },
+    {
+        "api_identifier": "openrouter/stepfun/step-3.5-flash:free",
+        "name": "Step 3.5 Flash (Free)",
+        "developer": "StepFun",
+        "is_active": true,
+        "tags": ["fast", "free", "open-source", "china"]
+    },
+    {
+        "api_identifier": "openrouter/arcee-ai/trinity-large-preview:free",
+        "name": "Trinity Large Preview (Free)",
+        "developer": "Arcee-AI",
+        "is_active": true,
+        "tags": ["free", "open-source", "usa"]
+    },
+    {
+        "api_identifier": "openrouter/hunter-alpha",
+        "name": "Hunter Alpha",
+        "developer": "Unknown",
+        "is_active": true,
+        "tags":["free-to-test", "1T+ Parameter", "temporary"]
+    },
+    {
+        "api_identifier": "z-ai/glm-4.5-air:free",
+        "name": "GLM 4.5 Air (Free)",
+        "developer": "Z.ai",
+        "is_active": true,
+        "tags":["china", "fast"]
+    }
+]
