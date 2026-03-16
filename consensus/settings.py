@@ -8,7 +8,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 if os.path.isfile(os.path.join(BASE_DIR, "env.py")):
     import env
 
-SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-fallback-key")
+SECRET_KEY = os.environ.get("SECRET_KEY")
 
 DEBUG = os.environ.get("DEBUG", "False") == "True"
 
@@ -16,21 +16,37 @@ ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.herokuapp.com']
 CSRF_TRUSTED_ORIGINS = ['https://*.herokuapp.com']
 
 INSTALLED_APPS = [
+    # django core
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
+
+    # media files
     'cloudinary_storage', 
     'cloudinary',
+
+    # AllAuth Core
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+
+    # AllAuth Providers
+    'allauth.socialaccount.providers.google',
+    'allauth.socialaccount.providers.microsoft',
     
+    # main apps
     'core',
     'users',
     'questions',
     'ai_engine',
     'home',
 ]
+
+SITE_ID = 1
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -41,6 +57,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
+    'allauth.account.middleware.AccountMiddleware',
 ]
 
 ROOT_URLCONF = 'consensus.urls'
@@ -61,13 +79,13 @@ TEMPLATES = [
     },
 ]
 
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+]
+
 WSGI_APPLICATION = 'consensus.wsgi.application'
 
-# <critical importance="10/10">
-# Database Configuration: Strictly enforces PostgreSQL for Dev/Prod Parity.
-# Developer must provide a DATABASE_URL in the local environment.
-# E.g., postgres://myuser:mypassword@localhost:5432/consensus
-# </critical>
 if os.environ.get("DATABASE_URL"):
     DATABASES = {
         'default': dj_database_url.parse(os.environ.get("DATABASE_URL"))
@@ -76,6 +94,17 @@ if os.environ.get("DATABASE_URL"):
 else:
     raise Exception("CRITICAL: No DATABASE_URL found! PostgreSQL is strictly required for local and production environments.")
 
+# Allauth Settings
+ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_EMAIL_VERIFICATION = 'none' # Set to 'mandatory in production
+ACCOUNT_LOGOUT_ON_GET = True
+ACCOUNT_SIGNUP_PASSWORD_ENTER_TWICE = True
+ACCOUNT_SESSION_REMEMBER = True
+ACCOUNT_UNIQUE_EMAIL = True
+
+LOGIN_REDIRECT_URL = 'dashboard'
+LOGOUT_REDIRECT_URL = 'home'
 
 # Static & Media Files Modern Configuration
 STATIC_URL = '/static/'

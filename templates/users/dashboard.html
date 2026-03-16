@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - ConsensusAI{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>Your Dashboard</h1>
+    <p>Welcome back, <strong>{{ user.username }}</strong>.</p>
+    
+    {% if needs_onboarding %}
+        <div style="background: #fff3cd; border: 1px solid #ffeeba; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <strong>New here?</strong> Start by voting on a trending question to see how your views align with AI models.
+            <br><br>
+            <a href="{% url 'home' %}" class="btn" style="background: #856404;">Browse Questions</a>
+        </div>
+    {% endif %}
+
+    <a href="{% url 'profile_edit' %}" class="btn">Edit Profile / Bio</a>
+</div>
+
+<hr>
+
+<div class="stats-grid" style="display: flex; gap: 20px; margin-bottom: 30px;">
+    <div class="stat-card" style="padding: 20px; border: 1px solid #ddd; border-radius: 8px; flex: 1;">
+        <h3 style="margin: 0;">{{ total_votes }}</h3>
+        <p style="margin: 0; color: #666;">Total Votes</p>
+    </div>
+    <div class="stat-card" style="padding: 20px; border: 1px solid #ddd; border-radius: 8px; flex: 1;">
+        <h3 style="margin: 0;">{{ predictive_count }}</h3>
+        <p style="margin: 0; color: #666;">Predictions Made</p>
+    </div>
+</div>
+
+<h2>Your Voting History</h2>
+<div style="overflow-x: auto;">
+    <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+            <tr style="text-align: left; border-bottom: 2px solid #eee;">
+                <th style="padding: 10px;">Question</th>
+                <th>Type</th>
+                <th>Your Input</th>
+                <th>AI Status</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for vote in votes %}
+            <tr style="border-bottom: 1px solid #eee;">
+                <td style="padding: 10px;">
+                    <a href="#">{{ vote.question.text }}</a>
+                </td>
+                <td><small>{{ vote.question.get_question_type_display }}</small></td>
+                <td>
+                    {% if vote.score is not None %}
+                        <strong>{{ vote.score|stringformat:"d" }}%</strong>
+                    {% else %}
+                        <em>Forecast</em>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if vote.question.latest_run %}
+                        <span style="color: green; font-weight: bold;">● AI Consensus Ready</span>
+                    {% else %}
+                        <span style="color: #999;">○ Pending AI...</span>
+                    {% endif %}
+                </td>
+                <td>{{ vote.created_at|date:"M d, Y" }}</td>
+            </tr>
+            {% empty %}
+            {% if not needs_onboarding %}
+            <tr>
+                <td colspan="5" style="padding: 40px; text-align: center; color: #666;">
+                    No votes found matching your current filters.
+                </td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

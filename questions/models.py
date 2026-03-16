@@ -71,9 +71,10 @@ class BaseVote(TimeStampedModel):
         abstract = True
         constraints =[
             models.CheckConstraint(
-                condition=models.Q(score__isnull=True) | (models.Q(score__gte=0.0) & models.Q(score__lte=100.0)),
+                check=models.Q(score__isnull=True) | (models.Q(score__gte=0.0) & models.Q(score__lte=100.0)),
                 name='%(app_label)s_%(class)s_valid_score'
             )
+
         ]
         
     def clean(self):

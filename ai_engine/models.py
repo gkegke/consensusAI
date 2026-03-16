@@ -26,7 +26,6 @@ class ConsensusRun(TimeStampedModel):
     verified_sentiment_avg = models.FloatField(null=True, blank=True)
     public_sentiment_avg = models.FloatField(null=True, blank=True)
     
-    # Store aggregated prediction distributions for fast front-end rendering
     aggregated_forecast = models.JSONField(blank=True, null=True)
     
     prompt_version = models.CharField(max_length=50, blank=True, default="v1.0")
@@ -42,8 +41,8 @@ class AIResponse(TimeStampedModel):
     
     raw_json = models.JSONField(blank=True, null=True) 
     
-    # Matching the BaseVote hybrid structure
     normalized_score = models.FloatField(null=True, blank=True) 
+    selected_choice = models.CharField(max_length=100, null=True, blank=True)
     complex_forecast = models.JSONField(null=True, blank=True) 
     
     summary_sentence = models.TextField()
@@ -55,7 +54,10 @@ class AIResponse(TimeStampedModel):
     class Meta:
         constraints =[
             models.CheckConstraint(
-                condition=models.Q(normalized_score__isnull=True) | (models.Q(normalized_score__gte=0.0) & models.Q(normalized_score__lte=100.0)),
+                check=models.Q(normalized_score__isnull=True) | (models.Q(normalized_score__gte=0.0) & models.Q(normalized_score__lte=100.0)),
                 name='ai_engine_airesponse_valid_ai_score'
             )
         ]
+
+    def __str__(self):
+        return f"{self.model.name} response for {self.run.question.slug}"

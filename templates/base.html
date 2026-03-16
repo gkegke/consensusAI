@@ -1,0 +1,51 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ConsensusAI{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+        /* Minimal layout fixes */
+        body { font-family: sans-serif; line-height: 1.6; max-width: 1000px; margin: 0 auto; padding: 20px; }
+        nav { margin-bottom: 20px; }
+        .messages { list-style: none; padding: 0; }
+        .success { color: green; border: 1px solid green; padding: 10px; }
+        .error { color: red; border: 1px solid red; padding: 10px; }
+        .btn { display: inline-block; padding: 8px 16px; background: #333; color: #fff; text-decoration: none; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="{% url 'home' %}"><strong>ConsensusAI</strong></a>
+        <div style="float: right;">
+            {% if user.is_authenticated %}
+                <span>Welcome, <strong>{{ user.username }}</strong></span> | 
+                <a href="{% url 'dashboard' %}">Dashboard</a> | 
+                <form action="{% url 'account_logout' %}" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" style="background: none; border: none; color: blue; cursor: pointer; text-decoration: underline; font-size: inherit; padding: 0;">Logout</button>
+                </form>
+            {% else %}
+                <a href="{% url 'account_login' %}">Login</a> | 
+                <a href="{% url 'account_signup' %}">Register</a>
+            {% endif %}
+        </div>
+    </nav>
+    <hr>
+
+    {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+                <div class="{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <main>
+        {% block content %}
+        {% endblock content %}
+    </main>
+</body>
+</html>
