@@ -1,14 +1,27 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ConsensusAI - Test</title>
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
-</head>
-<body>
-    <h1>Hello Django From Heroku</h1>
-    <p>If this text is red, static files are working!</p>
-</body>
-</html>
+{% extends "base.html" %}
+
+{% block title %}ConsensusAI - The AI vs Crowd Truth Tracker{% endblock %}
+
+{% block content %}
+<div class="hero" style="text-align: center; margin-bottom: 40px; padding: 40px; background: #f8f9fa; border-radius: 8px;">
+    <h1>Welcome to ConsensusAI</h1>
+    <p>Predict the future. See how your views align with the Crowd and cutting-edge AI.</p>
+</div>
+
+<h2>Trending Questions</h2>
+<div class="question-feed" style="display: flex; flex-direction: column; gap: 20px;">
+    {% for question in questions %}
+        <div class="question-card" style="padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+            <h3><a href="{% url 'question_detail' question.slug %}" style="text-decoration: none; color: #333;">{{ question.text }}</a></h3>
+            <p style="color: #666; font-size: 0.9em;">
+                Type: <strong>{{ question.get_question_type_display }}</strong> | 
+                Status: <strong>{{ question.get_status_display }}</strong>
+            </p>
+            <p>{{ question.context|truncatewords:20 }}</p>
+            <a href="{% url 'question_detail' question.slug %}" class="btn" style="background: #007bff;">Vote to Reveal Consensus</a>
+        </div>
+    {% empty %}
+        <p>No active questions at the moment. Check back later!</p>
+    {% endfor %}
+</div>
+{% endblock %}

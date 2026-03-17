@@ -8,9 +8,6 @@ class QuestionAdmin(admin.ModelAdmin):
     search_fields = ('text', 'slug', 'context')
     prepopulated_fields = {'slug': ('text',)}
     
-    # <important importance="8/10">
-    # Custom Admin actions to rapidly approve community 'Proposed' questions into the AI Pipeline.
-    # </important>
     actions =['make_active', 'make_proposed']
 
     @admin.action(description='Mark selected questions as ACTIVE (Enable AI)')

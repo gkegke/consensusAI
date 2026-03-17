@@ -1,0 +1,40 @@
+<div class="results-container">
+    <div style="background: #d4edda; color: #155724; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
+        🎉 <strong>Access Granted.</strong> Your view has been recorded.
+    </div>
+
+    <h3>Your Submission</h3>
+    <div style="padding: 20px; border: 1px solid #ccc; border-radius: 8px; margin-bottom: 30px; background: #fafafa;">
+        {% if user_vote %}
+            {% if user_vote.score is not None %}
+                <p style="font-size: 1.3em; margin: 0;">Score/Confidence: <strong>{{ user_vote.score|stringformat:"d" }}%</strong></p>
+            {% elif user_vote.complex_forecast %}
+                <ul style="margin: 10px 0; padding-left: 20px;">
+                {% for item in user_vote.complex_forecast %}
+                    <li style="margin-bottom: 5px;">{{ item.choice }}: <strong>{{ item.confidence }}%</strong></li>
+                {% endfor %}
+                </ul>
+            {% endif %}
+
+            {% if user_vote.reasoning %}
+                <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; font-style: italic; color: #444;">
+                    "{{ user_vote.reasoning }}"
+                </div>
+            {% endif %}
+            
+            <p style="margin: 15px 0 0 0; font-size: 0.8em; color: #999;">Recorded on: {{ user_vote.updated_at|date:"M d, Y H:i" }} UTC</p>
+        {% else %}
+            <p>You bypassed the voting gate.</p>
+        {% endif %}
+    </div>
+
+    <h3>Consensus Engine Results</h3>
+    <div style="padding: 40px; border: 2px dashed #007bff; border-radius: 8px; text-align: center; color: #666; background: #f0f7ff;">
+        {% if question.latest_run %}
+            <p style="color: #007bff; font-weight: bold;">AI Models have weighed in!</p>
+            <p>Full breakdown and bias mapping visualization coming in Phase 3/4.</p>
+        {% else %}
+            <p><em>The AI Consensus analysis is currently being synthesized for this question. <br>Our models typically update once every 24 hours for active polls.</em></p>
+        {% endif %}
+    </div>
+</div>

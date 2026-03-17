@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ question.text }} - ConsensusAI{% endblock %}
+
+{% block content %}
+<div class="question-header" style="margin-bottom: 30px;">
+    <h2>{{ question.text }}</h2>
+    <div style="background: #f4f4f4; padding: 15px; border-left: 4px solid #007bff;">
+        <strong>Context:</strong> {{ question.context }}
+    </div>
+    
+    <div style="margin-top: 10px; font-size: 0.9em; color: #666;">
+        <span>Type: {{ question.get_question_type_display }}</span> |
+        <span>Status: {{ question.get_status_display }}</span>
+        {% if question.resolution_date %}
+            | <span>Resolves: {{ question.resolution_date|date:"M d, Y" }}</span>
+        {% endif %}
+    </div>
+</div>
+
+<hr>
+
+<div class="gatekeeper-zone" style="margin-top: 20px;">
+    {% if can_view_results %}
+        <!-- User has passed the gate -->
+        {% include "questions/partials/results_display.html" %}
+    {% else %}
+        <!-- User must vote to pass -->
+        <div style="background: #e9ecef; padding: 20px; text-align: center; border-radius: 8px; margin-bottom: 20px;">
+            <h3 style="margin-top: 0;">🔒 Vote to Reveal Consensus</h3>
+            <p>Submit your stance below to unlock AI models and crowd predictions.</p>
+        </div>
+        
+        {% include "questions/partials/vote_form.html" %}
+    {% endif %}
+</div>
+{% endblock %}

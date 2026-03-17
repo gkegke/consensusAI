@@ -1,0 +1,74 @@
+{% load static %}
+<div class="vote-form-container" style="max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background: white;">
+    <form method="POST" action="{% url 'question_vote' question.slug %}" id="voteForm">
+        {% csrf_token %}
+        
+        {% if question.question_type != 'PREDICTIVE_CHOICE' %}
+            <!-- Slider Logic (Binary/Subjective) -->
+            <div class="slider-group" style="text-align: center;">
+                <label for="scoreInput" style="display: block; font-weight: bold; margin-bottom: 15px;">
+                    {{ question.text }}
+                </label>
+                <input type="range" id="scoreInput" name="score" min="0" max="100" value="50" style="width: 100%;">
+                <div style="font-size: 2em; font-weight: bold; margin-top: 10px; color: #007bff;">
+                    <span id="scoreDisplay">50</span>%
+                </div>
+            </div>
+            
+        {% else %}
+            <!-- Fluid Multiple Choice Logic -->
+            <div class="choice-group">
+                <p style="font-weight: bold; margin-bottom: 5px;">Assign your probabilities:</p>
+                <p style="font-size: 0.85em; color: #666; margin-bottom: 15px;">Enter values for your top choices. Remaining percentage will auto-assign to "Other".</p>
+                
+                <div id="choice-list">
+                    {% for choice in question.choices %}
+                    <div class="choice-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding: 10px; background: #f8f9fa; border-radius: 4px;">
+                        <span style="flex: 1;">{{ choice }}</span>
+                        <input type="hidden" name="custom_names" value="{{ choice }}">
+                        <div style="display: flex; align-items: center; gap: 5px;">
+                            <input type="number" name="custom_values" class="choice-input" value="0" min="0" max="100" step="0.5" style="width: 70px; padding: 5px; text-align: right;">
+                            <span>%</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div id="custom-choice-entry" style="margin: 20px 0; padding: 15px; border: 1px dashed #ccc; border-radius: 8px;">
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="newChoiceName" placeholder="Add custom option..." style="flex: 1; padding: 8px;">
+                        <button type="button" id="addChoiceBtn" class="btn" style="background: #6c757d; font-size: 0.9em;">+ Add</button>
+                    </div>
+                </div>
+
+                <div class="summary-box" style="background: #f1f3f5; padding: 15px; border-radius: 5px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; color: #495057;">
+                        <span>Other (Auto-Calculated):</span>
+                        <strong id="otherBalance" style="font-size: 1.1em;">100%</strong>
+                    </div>
+                    <hr style="border: 0; border-top: 1px solid #dee2e6; margin: 10px 0;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <strong>Total Specific Choices:</strong>
+                        <span id="allocatedTotal" style="font-size: 1.1em; font-weight: bold;">0%</span>
+                    </div>
+                </div>
+                
+                <div id="choiceError" style="color: red; font-size: 0.9em; margin-top: 10px; display: none;"></div>
+            </div>
+        {% endif %}
+
+        {% if user.is_authenticated %}
+        <div class="reasoning-group" style="margin-top: 25px;">
+            <label for="reasoning" style="display: block; font-weight: bold; margin-bottom: 5px;">Why do you think so? (Optional)</label>
+            <textarea name="reasoning" id="reasoning" rows="3" style="width: 100%; border: 1px solid #ddd; border-radius: 4px; padding: 10px;" placeholder="Share your logic..."></textarea>
+        </div>
+        {% endif %}
+
+        <hr style="margin: 25px 0;">
+        <button type="submit" id="submitBtn" class="btn" style="width: 100%; background: #28a745; font-size: 1.1em; padding: 12px;" disabled>
+            Submit My View
+        </button>
+    </form>
+</div>
+
+<script src="{% static 'js/voting.js' %}"></script>

@@ -1,64 +1,65 @@
-from django.test import TestCase
+from django.test import TestCase, Client, RequestFactory
 from django.contrib.auth.models import User
-from django.core.exceptions import ValidationError
+from django.urls import reverse
 from django.utils import timezone
 from datetime import timedelta
-from .models import Question, HumanVote
+from django.contrib.sessions.middleware import SessionMiddleware
+from .models import Question, HumanVote, AnonymousVote
+from .services import process_vote, get_client_ip
 
-class VoteConstraintTests(TestCase):
+class VoteServiceTests(TestCase):
     def setUp(self):
-        self.user = User.objects.create(username="testuser")
-        
-        self.binary_q = Question.objects.create(
-            text="Will X happen?",
-            slug="binary-q",
-            question_type="PREDICTIVE_BINARY",
-            resolution_date=timezone.now() + timedelta(days=10)
-        )
-        
+        self.factory = RequestFactory()
+        self.user = User.objects.create_user(username="testuser")
         self.choice_q = Question.objects.create(
             text="Who will win?",
             slug="choice-q",
             question_type="PREDICTIVE_CHOICE",
-            choices=["Option A", "Option B", "Option C"]
+            choices=["Option A", "Option B"]
         )
 
-    def test_valid_binary_vote_saves(self):
-        vote = HumanVote.objects.create(question=self.binary_q, user=self.user, score=85.0)
-        self.assertEqual(HumanVote.objects.count(), 1)
+    def test_process_vote_auto_calculates_other(self):
+        """Test S5: Backend auto-balances the 'Other' category."""
+        request = self.factory.post('/')
+        request.user = self.user
+        
+        # User only provides 40% for Option A
+        data = {
+            'complex_forecast': [
+                {'choice': 'Option A', 'confidence': 40.0}
+            ]
+        }
+        
+        success, msg = process_vote(request, self.choice_q, data)
+        self.assertTrue(success)
+        
+        vote = HumanVote.objects.get(question=self.choice_q, user=self.user)
+        # 40% Option A + 60% Other = 100%
+        forecast = {i['choice']: i['confidence'] for i in vote.complex_forecast}
+        self.assertEqual(forecast['Option A'], 40.0)
+        self.assertEqual(forecast['Other'], 60.0)
 
-    def test_predictive_choice_requires_valid_json_math(self):
-        # Math sums to 100.0 - Valid
-        valid_forecast = [
-            {"choice": "Option A", "confidence": 70.0},
-            {"choice": "Option B", "confidence": 30.0}
-        ]
-        HumanVote.objects.create(question=self.choice_q, user=self.user, complex_forecast=valid_forecast)
-        self.assertEqual(HumanVote.objects.filter(question=self.choice_q).count(), 1)
+    def test_vote_blocked_on_archived_question(self):
+        """Hardening: Ensure users can't vote via POST on archived questions."""
+        self.choice_q.status = 'ARCHIVED'
+        self.choice_q.save()
+        
+        request = self.factory.post('/')
+        request.user = self.user
+        
+        success, msg = process_vote(request, self.choice_q, {'score': 50.0})
+        self.assertFalse(success)
+        self.assertIn("archived", msg)
 
-    def test_predictive_choice_fails_on_bad_math(self):
-        # Math sums to 150.0 - Invalid
-        invalid_forecast = [
-            {"choice": "Option A", "confidence": 90.0},
-            {"choice": "Option B", "confidence": 60.0}
-        ]
-        with self.assertRaises(ValidationError):
-            HumanVote.objects.create(question=self.choice_q, user=self.user, complex_forecast=invalid_forecast)
-            
-    def test_predictive_choice_fails_on_invalid_choice(self):
-        # Contains "Option D" which is not in question.choices
-        invalid_forecast = [
-            {"choice": "Option D", "confidence": 100.0}
-        ]
-        with self.assertRaises(ValidationError):
-            HumanVote.objects.create(question=self.choice_q, user=self.user, complex_forecast=invalid_forecast)
-
-    def test_voting_after_deadline_fails(self):
-        expired_q = Question.objects.create(
-            text="Expired?",
-            slug="expired-q",
-            question_type="PREDICTIVE_BINARY",
-            resolution_date=timezone.now() - timedelta(days=1)
-        )
-        with self.assertRaises(ValidationError):
-            HumanVote.objects.create(question=expired_q, user=self.user, score=50.0)
+    def test_anonymous_session_persistence(self):
+        """Test S3: Anonymous votes are correctly tied to session keys."""
+        request = self.factory.post('/')
+        request.user = User()
+        middleware = SessionMiddleware(lambda r: None)
+        middleware.process_request(request)
+        request.session.save()
+        
+        q = Question.objects.create(text="Slider", slug="slider", question_type="SUBJECTIVE_SLIDER")
+        
+        process_vote(request, q, {'score': 75.0})
+        self.assertEqual(AnonymousVote.objects.filter(session_key=request.session.session_key).count(), 1)
