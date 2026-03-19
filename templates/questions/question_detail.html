@@ -5,8 +5,21 @@
 
 {% block content %}
 <div class="question-header" style="margin-bottom: 30px;">
-    <h2>{{ question.text }}</h2>
-    <div style="background: #f4f4f4; padding: 15px; border-left: 4px solid #007bff;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <h2>{{ question.text }}</h2>
+        
+        <!-- Quick Upvote Action if not locked -->
+        {% if question.status in 'PROPOSED,IN_REVIEW,REJECTED' %}
+        <form action="{% url 'question_upvote' question.slug %}" method="POST" style="margin-top: 20px;">
+            {% csrf_token %}
+            <button type="submit" class="btn" style="background: {% if has_upvoted %}#28a745{% else %}#f8f9fa{% endif %}; color: {% if has_upvoted %}white{% else %}#333{% endif %}; border: 1px solid #ccc;">
+                {% if has_upvoted %}✅ Upvoted{% else %}▲ Upvote to Fast-Track{% endif %} ({{ question.upvoters.count }})
+            </button>
+        </form>
+        {% endif %}
+    </div>
+
+    <div style="background: #f4f4f4; padding: 15px; border-left: 4px solid #007bff; margin-top: 10px;">
         <strong>Context:</strong> {{ question.context }}
     </div>
     
@@ -17,22 +30,41 @@
             | <span>Resolves: {{ question.resolution_date|date:"M d, Y" }}</span>
         {% endif %}
     </div>
+
+    {% if question.status == 'IN_REVIEW' or question.status == 'REJECTED' %}
+        <div style="background: #e2e3e5; color: #383d41; padding: 10px; margin-top: 15px; border-radius: 4px;">
+            <strong>Notice:</strong> This proposal is pending Admin approval, but is currently open for early community voting!
+        </div>
+    {% endif %}
 </div>
 
 <hr>
 
 <div class="gatekeeper-zone" style="margin-top: 20px;">
-    {% if can_view_results %}
-        <!-- User has passed the gate -->
+    {% if has_voted %}
+        <!-- User has voted natively -->
         {% include "questions/partials/results_display.html" %}
     {% else %}
-        <!-- User must vote to pass -->
+        <!-- User has NOT voted -->
         <div style="background: #e9ecef; padding: 20px; text-align: center; border-radius: 8px; margin-bottom: 20px;">
-            <h3 style="margin-top: 0;">🔒 Vote to Reveal Consensus</h3>
+            <h3 style="margin-top: 0;">🔒 Enter Prediction / Stance</h3>
             <p>Submit your stance below to unlock AI models and crowd predictions.</p>
         </div>
         
         {% include "questions/partials/vote_form.html" %}
+
+        <!-- Bypass Gate for Admin or Question Owner -->
+        {% if can_view_results %}
+            <div style="margin-top: 30px; text-align: center;">
+                <details style="background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #ddd; cursor: pointer;">
+                    <summary style="font-weight: bold; color: #6c757d;">Admin/Creator Bypass: View Current Consensus</summary>
+                    <div style="margin-top: 15px; text-align: left; cursor: default;">
+                        {% include "questions/partials/results_display.html" %}
+                    </div>
+                </details>
+            </div>
+        {% endif %}
+
     {% endif %}
 </div>
 {% endblock %}

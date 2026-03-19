@@ -19,8 +19,4 @@ class AIResponseAdmin(admin.ModelAdmin):
     list_display = ('run', 'model', 'normalized_score', 'selected_choice', 'is_refusal', 'cost')
     list_filter = ('is_refusal', 'model', 'run__question__question_type')
     
-    # <important importance="8/10">
-    # Allows Admins to manually insert/edit API responses (e.g. for correcting API failures 
-    # or entering data from ChatGPT manual web interface directly).
-    # </important>
     readonly_fields = ('created_at', 'updated_at')

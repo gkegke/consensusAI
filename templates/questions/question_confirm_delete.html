@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}Delete Proposal - ConsensusAI{% endblock %}
+
+{% block content %}
+<div style="max-width: 500px; margin: 40px auto; text-align: center; border: 1px solid #ddd; padding: 30px; border-radius: 8px;">
+    <h2>Are you sure?</h2>
+    <p>You are about to delete the question proposal:<br><strong>"{{ object.text }}"</strong></p>
+    <p style="color: red; font-size: 0.9em;">This action cannot be undone and will remove all associated upvotes.</p>
+    
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn" style="background: #dc3545; width: 100%; margin-bottom: 10px;">Yes, Delete Permanently</button>
+        <a href="{% url 'dashboard' %}" style="color: #666;">Cancel and Return to Dashboard</a>
+    </form>
+</div>
+{% endblock %}

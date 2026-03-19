@@ -24,7 +24,6 @@ def process_vote(request, question, parsed_data: dict) -> tuple[bool, str]:
     if question.status == 'ARCHIVED':
         return False, "This question is archived and no longer accepting votes."
 
-    # Logic for PREDICTIVE_CHOICE (Categorical)
     if question.question_type == 'PREDICTIVE_CHOICE':
         forecast = parsed_data.get('complex_forecast', [])
         current_sum = sum(float(item['confidence']) for item in forecast)
@@ -71,7 +70,7 @@ def process_vote(request, question, parsed_data: dict) -> tuple[bool, str]:
             
         action = "CREATED" if created else "UPDATED"
         logger.info(f"VOTE_SUCCESS | {action} | {identifier} | IP:{ip} | Q:{question.slug}")
-        return True, "Your vote has been successfully recorded!"
+        return True, "Your view has been successfully recorded!"
         
     except ValidationError as e:
         msg = e.message_dict if hasattr(e, 'message_dict') else str(e)

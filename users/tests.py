@@ -21,7 +21,7 @@ class UserAuthTests(TestCase):
         self.assertEqual(self.user.cai_profile.user.username, "testuser")
 
     def test_dashboard_requires_login(self):
-        """Tests LO3: Protected views redirect to login."""
+        """Tests: Protected views redirect to login."""
         response = self.client.get(reverse('dashboard'))
         self.assertEqual(response.status_code, 302)
         self.assertIn(reverse('account_login'), response.url)
@@ -33,9 +33,6 @@ class UserAuthTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'users/dashboard.html')
         
-    # <important importance="8/10">
-    # Verifying context integrity ensures UI widgets like "Onboarding" and "Prediction Count" behave deterministically.
-    # </important>
     def test_dashboard_context_and_stats(self):
         """Tests that dashboard aggregations and onboarding logic compute accurately."""
         self.client.login(username="testuser", password=self.user_password)

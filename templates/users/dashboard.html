@@ -31,6 +31,54 @@
     </div>
 </div>
 
+<h2>Your Question Proposals</h2>
+<div style="overflow-x: auto; margin-bottom: 40px;">
+    <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+            <tr style="text-align: left; border-bottom: 2px solid #eee;">
+                <th style="padding: 10px;">Question Idea</th>
+                <th>Status</th>
+                <th>Upvotes</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for prop in my_proposals %}
+            <tr style="border-bottom: 1px solid #eee;">
+                <td style="padding: 10px;">
+                    <a href="{% url 'question_detail' prop.slug %}">{{ prop.text|truncatewords:10 }}</a>
+                    {% if prop.admin_feedback %}
+                        <div style="font-size: 0.8em; color: #d9534f; margin-top: 4px;">Feedback: {{ prop.admin_feedback }}</div>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if prop.status == 'IN_REVIEW' %}<span style="color: #856404;">🟡 Review</span>
+                    {% elif prop.status == 'REJECTED' %}<span style="color: red;">🔴 Edits Needed</span>
+                    {% elif prop.status == 'PROPOSED' %}<span style="color: blue;">🔵 Voting Open</span>
+                    {% else %}<span style="color: green;">🟢 AI Active</span>{% endif %}
+                </td>
+                <td>{{ prop.upvoters.count }}</td>
+                <td>
+                    {% if prop.status in 'IN_REVIEW,REJECTED,PROPOSED' %}
+                        <a href="{% url 'question_edit' prop.slug %}" style="font-size: 0.85em; margin-right: 10px;">Edit</a>
+                        <a href="{% url 'question_delete' prop.slug %}" style="font-size: 0.85em; color: red;">Delete</a>
+                    {% else %}
+                        <span style="color: #999; font-size: 0.85em;">Locked</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4" style="padding: 20px; text-align: center; color: #666;">
+                    You haven't submitted any ideas yet. <br>
+                    <a href="{% url 'question_submit' %}" class="btn" style="margin-top: 10px; font-size: 0.8em;">Submit a Question</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
 <h2>Your Voting History</h2>
 <div style="overflow-x: auto;">
     <table style="width: 100%; border-collapse: collapse;">
@@ -47,7 +95,7 @@
             {% for vote in votes %}
             <tr style="border-bottom: 1px solid #eee;">
                 <td style="padding: 10px;">
-                    <a href="#">{{ vote.question.text }}</a>
+                    <a href="{% url 'question_detail' vote.question.slug %}">{{ vote.question.text }}</a>
                 </td>
                 <td><small>{{ vote.question.get_question_type_display }}</small></td>
                 <td>

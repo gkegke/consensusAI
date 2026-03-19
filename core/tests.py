@@ -6,9 +6,6 @@ from ai_engine.models import AIModel
 
 class PopulateDBCommandTest(TestCase):
     
-    # <important importance="8/10">
-    # Ensures the command is idempotent and functions correctly without crashing.
-    # </important>
     def test_populate_db_command(self):
         """Test that the populate_db command runs and creates initial data securely."""
         

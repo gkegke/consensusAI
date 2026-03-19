@@ -4,15 +4,11 @@ from django.views.generic import TemplateView, UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from .models import UserProfile
-from questions.models import HumanVote
+from questions.models import HumanVote, Question
 
 logger = logging.getLogger(__name__)
 
 class DashboardView(LoginRequiredMixin, TemplateView):
-    """
-    Displays the authenticated user's voting history and profile stats.
-    Satisfies LO3 and Phase 2.1 Requirements.
-    """
     template_name = 'users/dashboard.html'
     
     def get_context_data(self, **kwargs):
@@ -32,14 +28,13 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             'question', 
             'question__latest_run'
         ).order_by('-created_at')[:50]
+
+        context['my_proposals'] = Question.objects.filter(submitted_by=user).order_by('-created_at')
         
-        logger.info(f"Dashboard: User {user.username} (Votes: {context['total_votes']})")
+        logger.info(f"Dashboard: User {user.username} loaded.")
         return context
 
 class ProfileUpdateView(LoginRequiredMixin, UpdateView):
-    """
-    Allows users to update their profile information.
-    """
     model = UserProfile
     fields = ['bio']
     template_name = 'users/profile_form.html'
@@ -49,11 +44,9 @@ class ProfileUpdateView(LoginRequiredMixin, UpdateView):
         return self.request.user.cai_profile
 
     def form_valid(self, form):
-        # Once they save their profile, consider them onboarded
         profile = form.save(commit=False)
         profile.is_onboarded = True
         profile.save()
         
         messages.success(self.request, "Profile updated successfully.")
-        logger.info(f"User {self.request.user.username} updated their bio and finished onboarding.")
         return super().form_valid(form)
