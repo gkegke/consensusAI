@@ -29,12 +29,27 @@
     </div>
 
     <h3>Consensus Engine Results</h3>
-    <div style="padding: 40px; border: 2px dashed #007bff; border-radius: 8px; text-align: center; color: #666; background: #f0f7ff;">
-        {% if question.latest_run %}
-            <p style="color: #007bff; font-weight: bold;">AI Models have weighed in!</p>
-            <p>Full breakdown and bias mapping visualization coming in Phase 3/4.</p>
-        {% else %}
-            <p><em>The AI Consensus analysis is currently being synthesized for this question. <br>Our models typically update once every 24 hours for active polls.</em></p>
-        {% endif %}
-    </div>
+    {% if question.latest_run %}
+        <div style="padding: 20px; border: 2px solid #007bff; border-radius: 8px; background: #f0f7ff; margin-bottom: 20px;">
+            <h4 style="margin-top: 0; color: #007bff;">AI Synthesis</h4>
+            <p><strong>Summary:</strong> {{ question.latest_run.synthesis_summary }}</p>
+            <p><strong>Minority View:</strong> {{ question.latest_run.minority_report }}</p>
+            <div style="font-size: 0.8em; color: #666;">Polarization Index: {{ question.latest_run.polarization_index }}%</div>
+        </div>
+
+        <h4>Individual Model Breakdown (Dev View)</h4>
+        <div style="display: grid; gap: 10px;">
+            {% for resp in question.latest_run.responses.all %}
+                <div style="padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.9em; background: white;">
+                    <strong>{{ resp.model.name }}:</strong> 
+                    {% if resp.normalized_score is not None %}{{ resp.normalized_score|stringformat:"d" }}% | {% endif %}
+                    {{ resp.summary_sentence }}
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div style="padding: 40px; border: 2px dashed #ccc; border-radius: 8px; text-align: center; color: #666; background: #fafafa;">
+            <p>The AI Consensus analysis is currently being synthesized...</p>
+        </div>
+    {% endif %}
 </div>

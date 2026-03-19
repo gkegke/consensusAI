@@ -1,21 +1,23 @@
+# Core Framework
 Django>=4.2.11,<5.0
 dj-database-url==2.1.0
 whitenoise[brotli]==6.8.2
 gunicorn==22.0.0
 django-allauth==0.61.1
-litellm>=1.31.0
-instructor>=1.0.0
+
+# AI Orchestration & Structured Output
+# Pinning instructor to 1.14.x as it's the stable 2026 baseline
+instructor==1.14.5
+litellm==1.63.3
 pydantic>=2.6.3,<3.0.0
-pydantic-ai>=0.0.18,<0.13
+
+# Critical Fix: Pin Mistral SDK to < 2.0.0 to resolve the Instructor import bug
+mistralai>=1.0.0,<2.0.0
+
+# Storage & Utilities
 cloudinary==1.41.0
 django-cloudinary-storage==0.3.0
 psycopg2-binary==2.9.9
 requests>=2.32.3
 asgiref>=3.8.1
-certifi>=2024.2.2
-charset-normalizer>=3.3.2
-idna>=3.7
-setuptools>=69.0.0
-six>=1.16.0
-sqlparse>=0.5.0
-urllib3>=1.26.18
+python-dateutil>=2.9.0

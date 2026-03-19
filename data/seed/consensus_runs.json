@@ -1,0 +1,44 @@
+[
+    {
+        "question_slug": "universal-basic-income-global",
+        "prompt_version": "seed-v1",
+        "synthesis_summary": "Most AI models agree that Universal Basic Income offers a viable safety net against automation, though they heavily debate the economic inflation risks.",
+        "minority_report": "One model explicitly flagged that UBI relies on taxation structures that are inherently unstable long-term.",
+        "polarization_index": 35.5,
+        "responses": [
+            {
+                "api_identifier": "openrouter/stepfun/step-3.5-flash:free",
+                "summary_sentence": "UBI is a net positive for social stability but requires aggressive tax reform.",
+                "normalized_score": 75.0,
+                "cost": 0.0001
+            },
+            {
+                "api_identifier": "z-ai/glm-4.5-air:free",
+                "summary_sentence": "Economic disruption caused by UBI inflation may outweigh the initial safety net benefits.",
+                "normalized_score": 40.0,
+                "cost": 0.0001
+            }
+        ]
+    },
+    {
+        "question_slug": "spacex-mars-2026",
+        "prompt_version": "seed-v1",
+        "synthesis_summary": "Consensus suggests an uncrewed Mars landing by 2026 is highly unlikely due to regulatory and orbital alignment constraints.",
+        "minority_report": "Hunter Alpha suggests SpaceX's rapid prototyping could outpace historical aerospace timelines.",
+        "polarization_index": 20.0,
+        "responses": [
+            {
+                "api_identifier": "openrouter/stepfun/step-3.5-flash:free",
+                "summary_sentence": "Historical delays in Starship development make the 2026 window highly improbable.",
+                "normalized_score": 15.0,
+                "cost": 0.0001
+            },
+            {
+                "api_identifier": "openrouter/hunter-alpha",
+                "summary_sentence": "There is a non-zero but slim chance of a rapid cadence yielding success.",
+                "normalized_score": 25.0,
+                "cost": 0.0001
+            }
+        ]
+    }
+]

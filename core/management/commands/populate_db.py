@@ -1,34 +1,34 @@
+from decimal import Decimal
 import json
 import logging
 from pathlib import Path
 from dateutil.parser import parse as parse_date
 from django.core.management.base import BaseCommand
 from django.conf import settings
-from ai_engine.models import AIModel
+from ai_engine.models import AIModel, ConsensusRun, AIResponse
 from questions.models import Question
 
 logger = logging.getLogger(__name__)
 
 class Command(BaseCommand):
-    help = 'Idempotently syncs database models and questions from JSON seed files.'
+    help = 'Idempotently syncs database models, questions, and mock AI runs from JSON seed files.'
 
     def handle(self, *args, **kwargs):
         seed_dir = Path(settings.BASE_DIR) / "data" / "seed"
         
         self.sync_models(seed_dir / "ai_models.json")
         self.sync_questions(seed_dir / "questions.json")
+        self.sync_runs(seed_dir / "consensus_runs.json")
         
         self.stdout.write(self.style.SUCCESS("✓ Sync Complete"))
 
     def sync_models(self, file_path):
         if not file_path.exists():
-            self.stdout.write(self.style.WARNING(f"File not found: {file_path}"))
             return
-
         with open(file_path, 'r') as f:
             data = json.load(f)
             for item in data:
-                obj, created = AIModel.objects.update_or_create(
+                AIModel.objects.update_or_create(
                     api_identifier=item['api_identifier'],
                     defaults={
                         'name': item['name'],
@@ -37,22 +37,15 @@ class Command(BaseCommand):
                         'tags': item.get('tags',[])
                     }
                 )
-                status = "Created" if created else "Updated"
-                self.stdout.write(f"  [AIModel] {status}: {obj.api_identifier}")
 
     def sync_questions(self, file_path):
         if not file_path.exists():
-            self.stdout.write(self.style.WARNING(f"File not found: {file_path}"))
             return
-
         with open(file_path, 'r') as f:
             data = json.load(f)
             for item in data:
-                resolution_date = None
-                if 'resolution_date' in item and item['resolution_date']:
-                    resolution_date = parse_date(item['resolution_date'])
-                    
-                obj, created = Question.objects.update_or_create(
+                resolution_date = parse_date(item['resolution_date']) if item.get('resolution_date') else None
+                obj, _ = Question.objects.update_or_create(
                     slug=item['slug'],
                     defaults={
                         'text': item['text'],
@@ -70,6 +63,44 @@ class Command(BaseCommand):
                 if obj.question_type != 'SUBJECTIVE_SLIDER' and obj.resolution_state == 'N_A':
                      obj.resolution_state = 'PENDING'
                      obj.save()
-                     
-                status = "Created" if created else "Updated"
-                self.stdout.write(f"  [Question] {status}: {obj.slug}")
+
+    def sync_runs(self, file_path):
+        if not file_path.exists():
+            return
+
+        with open(file_path, 'r') as f:
+            data = json.load(f)
+            for run_data in data:
+                try:
+                    q = Question.objects.get(slug=run_data['question_slug'])
+                    
+                    # update_or_create to allow refreshing
+                    run, created = ConsensusRun.objects.update_or_create(
+                        question=q,
+                        prompt_version=run_data.get('prompt_version', 'seed-data-v1'),
+                        defaults={
+                            'synthesis_summary': run_data.get('synthesis_summary', ''),
+                            'minority_report': run_data.get('minority_report', ''),
+                            'polarization_index': run_data.get('polarization_index', 0.0)
+                        }
+                    )
+                    
+                    # Wipe and rebuild responses to trigger post_save signals for costs
+                    run.responses.all().delete()
+
+                    for resp in run_data.get('responses', []):
+                        model = AIModel.objects.filter(api_identifier=resp['api_identifier']).first()
+                        if model:
+                            # This trigger the update_run_cost signal automatically
+                            AIResponse.objects.create(
+                                run=run,
+                                model=model,
+                                summary_sentence=resp.get('summary_sentence', ''),
+                                normalized_score=resp.get('normalized_score'),
+                                complex_forecast=resp.get('complex_forecast'),
+                                cost=Decimal(str(resp.get('cost', 0)))
+                            )
+                    
+                    self.stdout.write(f"  [Run] Synced: {q.slug} (Responses: {run.responses.count()})")
+                except Question.DoesNotExist:
+                    self.stdout.write(self.style.WARNING(f"  [Skip] Question slug {run_data['question_slug']} not found."))

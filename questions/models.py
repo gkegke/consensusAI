@@ -49,11 +49,23 @@ class Question(TimeStampedModel):
     status = models.CharField(choices=STATUS_CHOICES, default='IN_REVIEW', db_index=True)
     is_featured = models.BooleanField(default=False, db_index=True)
     is_auto_poll = models.BooleanField(default=False, db_index=True)
+
+    # --- Orchestration Control Fields ---
+    orchestration_queued = models.BooleanField(default=False, db_index=True, help_text="If True, the orchestrator will process this next.")
+    ai_priority = models.IntegerField(default=0, db_index=True, help_text="Higher numbers are processed first.")
     
     allow_skip_vote = models.BooleanField(default=False)
     
     favorites = models.ManyToManyField(User, related_name='favorited_questions', blank=True)
     tags = ArrayField(models.CharField(max_length=30), blank=True, default=list)
+
+    # Selection by tag group to reduce admin friction
+    model_group_tags = ArrayField(
+        models.CharField(max_length=30), 
+        blank=True, 
+        default=list, 
+        help_text="Automatically query all active models with these tags (e.g., 'free', 'frontier')."
+    )
     
     submitted_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name='submitted_questions')
     upvoters = models.ManyToManyField(User, related_name='upvoted_questions', blank=True)
@@ -86,14 +98,18 @@ class Question(TimeStampedModel):
             return False
         return True
 
+    def update_latest_run(self):
+        """Automatically sets the latest_run based on the most recent ConsensusRun."""
+        latest = self.runs.order_by('-created_at').first()
+        if latest:
+            self.latest_run = latest
+            # Use update_fields to avoid triggering full save() and slug logic
+            Question.objects.filter(id=self.id).update(latest_run=latest)
+
     def save(self, *args, **kwargs):
         if not self.slug:
             base = slugify(self.text)[:240]
             self.slug = f"{base}-{uuid.uuid4().hex[:6]}"
-        
-        if self.status != self.__original_status:
-            logger.info(f"STATUS_CHANGE | Q:{self.slug} | FROM:{self.__original_status} | TO:{self.status}")
-        
         super().save(*args, **kwargs)
 
     def __str__(self):
