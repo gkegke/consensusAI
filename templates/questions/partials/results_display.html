@@ -1,0 +1,55 @@
+<div class="results-container">
+    <div style="background: #d4edda; color: #155724; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
+        🎉 <strong>Access Granted.</strong> Your view has been recorded.
+    </div>
+
+    <h3>Your Submission</h3>
+    <div style="padding: 20px; border: 1px solid #ccc; border-radius: 8px; margin-bottom: 30px; background: #fafafa;">
+        {% if user_vote %}
+            {% if user_vote.score is not None %}
+                <p style="font-size: 1.3em; margin: 0;">Score/Confidence: <strong>{{ user_vote.score|stringformat:"d" }}%</strong></p>
+            {% elif user_vote.complex_forecast %}
+                <ul style="margin: 10px 0; padding-left: 20px;">
+                {% for item in user_vote.complex_forecast %}
+                    <li style="margin-bottom: 5px;">{{ item.choice }}: <strong>{{ item.confidence }}%</strong></li>
+                {% endfor %}
+                </ul>
+            {% endif %}
+
+            {% if user_vote.reasoning %}
+                <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; font-style: italic; color: #444;">
+                    "{{ user_vote.reasoning }}"
+                </div>
+            {% endif %}
+            
+            <p style="margin: 15px 0 0 0; font-size: 0.8em; color: #999;">Recorded on: {{ user_vote.updated_at|date:"M d, Y H:i" }} UTC</p>
+        {% else %}
+            <p>You bypassed the voting gate.</p>
+        {% endif %}
+    </div>
+
+    <h3>Consensus Engine Results</h3>
+    {% if question.latest_run %}
+        <div style="padding: 20px; border: 2px solid #007bff; border-radius: 8px; background: #f0f7ff; margin-bottom: 20px;">
+            <h4 style="margin-top: 0; color: #007bff;">AI Synthesis</h4>
+            <p><strong>Summary:</strong> {{ question.latest_run.synthesis_summary }}</p>
+            <p><strong>Minority View:</strong> {{ question.latest_run.minority_report }}</p>
+            <div style="font-size: 0.8em; color: #666;">Polarization Index: {{ question.latest_run.polarization_index }}%</div>
+        </div>
+
+        <h4>Individual Model Breakdown (Dev View)</h4>
+        <div style="display: grid; gap: 10px;">
+            {% for resp in question.latest_run.responses.all %}
+                <div style="padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.9em; background: white;">
+                    <strong>{{ resp.model.name }}:</strong> 
+                    {% if resp.normalized_score is not None %}{{ resp.normalized_score|stringformat:"d" }}% | {% endif %}
+                    {{ resp.summary_sentence }}
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div style="padding: 40px; border: 2px dashed #ccc; border-radius: 8px; text-align: center; color: #666; background: #fafafa;">
+            <p>The AI Consensus analysis is currently being synthesized...</p>
+        </div>
+    {% endif %}
+</div>

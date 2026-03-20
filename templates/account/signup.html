@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load account socialaccount %}
+
+{% block title %}Register - ConsensusAI{% endblock %}
+
+{% block content %}
+<div class="auth-container" style="max-width: 400px; margin: 40px auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+    <h2 style="text-align: center;">Register</h2>
+
+    {% get_providers as socialaccount_providers %}
+    {% if socialaccount_providers %}
+        <div class="social-logins" style="margin-bottom: 20px;">
+            <p style="text-align: center; color: #666;">Sign up with:</p>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                {% for provider in socialaccount_providers %}
+                    <a href="{% provider_login_url provider.id process='login' %}" 
+                       class="btn" style="text-align: center; background: #444;">
+                        {{ provider.name }}
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+        <hr>
+    {% endif %}
+
+    <form class="signup" id="signup_form" method="POST" action="{% url 'account_signup' %}">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button class="btn" type="submit" style="width: 100%; background: #28a745;">Sign Up</button>
+    </form>
+    
+    <p style="margin-top: 20px; text-align: center;">
+        Already have an account? <a href="{% url 'account_login' %}">Log In</a>.
+    </p>
+</div>
+{% endblock %}

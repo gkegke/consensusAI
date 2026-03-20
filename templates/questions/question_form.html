@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}{% if form.instance.pk %}Edit Proposal{% else %}Submit a Question{% endif %} - ConsensusAI{% endblock %}
+
+{% block content %}
+<div class="form-container" style="max-width: 600px; margin: 0 auto; background: #f9f9f9; padding: 30px; border-radius: 8px; border: 1px solid #ddd;">
+    <h2 style="margin-top: 0;">{% if form.instance.pk %}Edit Your Proposal{% else %}Propose a Question{% endif %}</h2>
+    
+    {% if form.instance.admin_feedback %}
+    <div style="background: #fff3cd; color: #856404; padding: 15px; border-left: 5px solid #ffc107; margin-bottom: 25px; border-radius: 4px;">
+        <strong>Moderator Feedback:</strong><br>
+        <em>"{{ form.instance.admin_feedback }}"</em>
+    </div>
+    {% endif %}
+
+    <p style="color: #666; margin-bottom: 25px;">
+        Submit your idea to the Consensus Engine. It will be reviewed by moderators before entering the community voting pool.
+    </p>
+
+    <form method="POST">
+        {% csrf_token %}
+        <div style="display: flex; flex-direction: column; gap: 15px;">
+            {% for field in form %}
+                <!-- Added ID wrapper for JS targeting -->
+                <div class="form-group" id="group_{{ field.name }}">
+                    <label style="font-weight: bold; display: block; margin-bottom: 5px;">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}
+                        <small style="color: #666; display: block; margin-top: 4px;">{{ field.help_text }}</small>
+                    {% endif %}
+                    {% for error in field.errors %}
+                        <div style="color: red; font-size: 0.9em; margin-top: 4px;">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        </div>
+        
+        <hr style="margin: 25px 0;">
+        <div style="display: flex; gap: 10px;">
+            <button type="submit" class="btn" style="flex: 2; background: #28a745; font-size: 1.1em;">
+                {% if form.instance.status == 'REJECTED' %}Resubmit for Review{% else %}Submit for Review{% endif %}
+            </button>
+            <a href="{% url 'dashboard' %}" class="btn" style="flex: 1; background: #6c757d; text-align: center;">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Dynamically hides irrelevant fields to reduce cognitive load during submission.
+    document.addEventListener("DOMContentLoaded", function() {
+        const typeSelect = document.getElementById('id_question_type');
+        const resDateGroup = document.getElementById('group_resolution_date');
+        const choicesGroup = document.getElementById('group_choices_text');
+
+        function toggleFields() {
+            const val = typeSelect.value;
+            if (val === 'SUBJECTIVE_SLIDER') {
+                if(resDateGroup) resDateGroup.style.display = 'none';
+                if(choicesGroup) choicesGroup.style.display = 'none';
+            } else if (val === 'PREDICTIVE_BINARY') {
+                if(resDateGroup) resDateGroup.style.display = 'block';
+                if(choicesGroup) choicesGroup.style.display = 'none';
+            } else if (val === 'PREDICTIVE_CHOICE') {
+                if(resDateGroup) resDateGroup.style.display = 'block';
+                if(choicesGroup) choicesGroup.style.display = 'block';
+            }
+        }
+        
+        if(typeSelect) {
+            typeSelect.addEventListener('change', toggleFields);
+            toggleFields(); // Init on load
+        }
+    });
+</script>
+{% endblock %}

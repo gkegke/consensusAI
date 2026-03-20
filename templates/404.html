@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block title %}404 Not Found - ConsensusAI{% endblock %}
+
+{% block content %}
+<div style="text-align: center; padding: 60px 20px; border: 1px solid #ddd; border-radius: 8px; background: #f9f9f9; margin-top: 40px;">
+    <h1 style="color: #d9534f; font-size: 3em; margin-bottom: 10px;">404</h1>
+    <h2>Question Not Found</h2>
+    <p style="color: #666; margin-bottom: 30px;">The prediction or question you are looking for has been archived, deleted, or never existed.</p>
+    
+    <a href="{% url 'home' %}" class="btn" style="background: #007bff; padding: 12px 25px; font-size: 1.1em;">Return to the Timeline</a>
+</div>
+{% endblock %}
