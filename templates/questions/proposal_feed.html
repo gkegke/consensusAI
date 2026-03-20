@@ -3,81 +3,76 @@
 {% block title %}Community Proposals - ConsensusAI{% endblock %}
 
 {% block content %}
-<div style="margin-bottom: 30px; display: flex; justify-content: space-between; align-items: flex-end;">
-    <div>
-        <h1>Community Proposals</h1>
-        <p>Vote on the questions you want our AI Consensus Models to analyze next.</p>
+<div class="flex flex-col md:flex-row justify-between items-end mb-8">
+    <div class="mb-4 md:mb-0">
+        <h1 class="text-3xl font-extrabold text-slate-900 mb-2">Community Proposals</h1>
+        <p class="text-slate-600">Vote to prioritize which questions the AI Engine processes next.</p>
     </div>
     
-    <!-- Sorting UI -->
-    <div style="margin-bottom: 10px; font-size: 0.9em;">
-        Sort by: 
-        <a href="?sort=trending" style="font-weight: {% if current_sort == 'trending' %}bold{% else %}normal{% endif %}; text-decoration: none; color: #007bff;">Trending</a> | 
-        <a href="?sort=newest" style="font-weight: {% if current_sort == 'newest' %}bold{% else %}normal{% endif %}; text-decoration: none; color: #007bff;">Newest</a>
+    <div class="flex items-center gap-4 text-sm bg-white border border-slate-200 px-4 py-2 rounded-lg shadow-sm">
+        <span class="text-slate-500 font-medium">Sort by:</span> 
+        <a href="?sort=trending" class="{% if current_sort == 'trending' %}font-bold text-primary{% else %}text-slate-600 hover:text-primary{% endif %} transition">Trending</a>
+        <span class="text-slate-300">|</span>
+        <a href="?sort=newest" class="{% if current_sort == 'newest' %}font-bold text-primary{% else %}text-slate-600 hover:text-primary{% endif %} transition">Newest</a>
     </div>
 </div>
 
-<div class="proposal-feed" style="display: flex; flex-direction: column; gap: 20px;">
+<div class="space-y-4">
     {% for question in questions %}
-        <div class="question-card" style="padding: 25px; border: 1px solid #ddd; border-radius: 12px; display: flex; gap: 25px; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+        <div class="bg-white border border-slate-200 rounded-xl p-5 flex gap-5 hover:shadow-md transition">
             
             <!-- Upvote Widget -->
-            <div style="text-align: center; min-width: 70px; background: #f8f9fa; border-radius: 8px; padding: 10px;">
+            <div class="flex flex-col items-center justify-center w-16 bg-slate-50 rounded-lg border border-slate-100 py-2">
                 <form action="{% url 'question_upvote' question.slug %}" method="POST">
                     {% csrf_token %}
-                    <button type="submit" style="background: none; border: none; cursor: pointer; font-size: 1.8em; color: {% if user in question.upvoters.all %}#28a745{% else %}#adb5bd{% endif %}; transition: color 0.2s;">
+                    <button type="submit" class="text-2xl transition {% if user in question.upvoters.all %}text-emerald-500 hover:text-emerald-600{% else %}text-slate-300 hover:text-slate-400{% endif %}">
                         ▲
                     </button>
                 </form>
-                <div style="font-size: 1.4em; font-weight: bold; margin-top: -5px;">{{ question.upvote_count }}</div>
-                <div style="font-size: 0.75em; color: #6c757d; text-transform: uppercase; letter-spacing: 0.5px;">Support</div>
+                <span class="text-xl font-bold text-slate-800 -mt-1">{{ question.upvote_count }}</span>
             </div>
 
             <!-- Content -->
-            <div style="flex: 1;">
-                <h3 style="margin-top: 0; margin-bottom: 8px;">
-                    <a href="{% url 'question_detail' question.slug %}" style="text-decoration: none; color: #1a1a1a;">{{ question.text }}</a>
+            <div class="flex-1">
+                <h3 class="text-lg font-bold text-slate-900 mb-2 leading-tight">
+                    <a href="{% url 'question_detail' question.slug %}" class="hover:text-primary transition">{{ question.text }}</a>
                 </h3>
                 
-                <div style="display: flex; gap: 15px; margin-bottom: 12px; font-size: 0.85em; color: #6c757d;">
-                    <span>📁 <strong>{{ question.get_question_type_display }}</strong></span>
-                    <span>👤 Sub: <strong>{% if question.submitted_by %}{{ question.submitted_by.username }}{% else %}System{% endif %}</strong></span>
+                <div class="flex flex-wrap items-center gap-3 mb-3 text-xs text-slate-500 font-medium">
+                    <span class="bg-slate-100 px-2 py-1 rounded">{{ question.get_question_type_display }}</span>
+                    <span>By: <span class="text-slate-700">{% if question.submitted_by %}{{ question.submitted_by.username }}{% else %}System{% endif %}</span></span>
                     {% if question.status == 'IN_REVIEW' %}
-                        <span style="background: #fff3cd; color: #856404; padding: 2px 6px; border-radius: 4px; font-weight: bold;">PENDING REVIEW</span>
+                        <span class="bg-amber-100 text-amber-800 px-2 py-1 rounded border border-amber-200">Pending Review</span>
                     {% endif %}
                 </div>
 
-                <div style="color: #444; line-height: 1.5; border-left: 3px solid #dee2e6; padding-left: 15px; margin-bottom: 20px;">
-                    {{ question.context|truncatewords:40 }}
-                </div>
+                <p class="text-slate-600 text-sm mb-4 line-clamp-2">{{ question.context }}</p>
                 
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <a href="{% url 'question_detail' question.slug %}" class="btn" style="font-size: 0.85em; background: #007bff; padding: 8px 20px;">View & Predict</a>
-                    <span style="font-size: 0.8em; color: #999;">Created {{ question.created_at|timesince }} ago</span>
+                <div class="flex justify-between items-center pt-3 border-t border-slate-100">
+                    <a href="{% url 'question_detail' question.slug %}" class="text-sm font-semibold text-primary hover:text-blue-800 transition">View & Predict &rarr;</a>
+                    <span class="text-xs text-slate-400">{{ question.created_at|timesince }} ago</span>
                 </div>
             </div>
         </div>
     {% empty %}
-        <div style="padding: 60px; text-align: center; border: 2px dashed #dee2e6; border-radius: 12px; background: #f8f9fa;">
-            <p style="color: #6c757d; font-size: 1.1em;">No community proposals are currently trending.</p>
-            <a href="{% url 'question_submit' %}" class="btn" style="background: #28a745;">Submit the First Idea</a>
+        <div class="py-16 text-center border-2 border-dashed border-slate-300 rounded-xl bg-slate-50">
+            <p class="text-slate-500 mb-4">No community proposals are currently trending.</p>
+            <a href="{% url 'question_submit' %}" class="inline-block px-6 py-2 bg-emerald-500 text-white font-medium rounded-lg hover:bg-emerald-600 transition">Submit Idea</a>
         </div>
     {% endfor %}
 </div>
 
-<!-- Pagination (Simple) -->
+<!-- Simple Pagination -->
 {% if is_paginated %}
-    <div style="margin-top: 30px; text-align: center;">
+    <div class="mt-10 flex justify-center items-center gap-4 text-sm font-medium text-slate-600">
         {% if page_obj.has_previous %}
-            <a href="?page=1{% if current_sort %}&sort={{ current_sort }}{% endif %}">&laquo; first</a>
-            <a href="?page={{ page_obj.previous_page_number }}{% if current_sort %}&sort={{ current_sort }}{% endif %}">previous</a>
+            <a href="?page={{ page_obj.previous_page_number }}{% if current_sort %}&sort={{ current_sort }}{% endif %}" class="hover:text-primary">&larr; Prev</a>
         {% endif %}
 
-        <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+        <span class="bg-white border border-slate-200 px-4 py-2 rounded-lg shadow-sm">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
 
         {% if page_obj.has_next %}
-            <a href="?page={{ page_obj.next_page_number }}{% if current_sort %}&sort={{ current_sort }}{% endif %}">next</a>
-            <a href="?page={{ page_obj.paginator.num_pages }}{% if current_sort %}&sort={{ current_sort }}{% endif %}">last &raquo;</a>
+            <a href="?page={{ page_obj.next_page_number }}{% if current_sort %}&sort={{ current_sort }}{% endif %}" class="hover:text-primary">Next &rarr;</a>
         {% endif %}
     </div>
 {% endif %}

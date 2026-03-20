@@ -2,36 +2,55 @@
 {% load i18n %}
 {% load account socialaccount %}
 
-{% block title %}Register - ConsensusAI{% endblock %}
+{% block title %}Register | ConsensusAI{% endblock %}
 
 {% block content %}
-<div class="auth-container" style="max-width: 400px; margin: 40px auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
-    <h2 style="text-align: center;">Register</h2>
+<div class="min-h-[80vh] flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl shadow-2xl border border-slate-100 p-8 w-full max-w-sm">
+        <div class="text-center mb-8">
+            <h2 class="text-3xl font-black text-slate-900 tracking-tight">Join the Ledger</h2>
+            <p class="text-slate-500 mt-2 text-sm font-medium">Create your account to start predicting.</p>
+        </div>
 
-    {% get_providers as socialaccount_providers %}
-    {% if socialaccount_providers %}
-        <div class="social-logins" style="margin-bottom: 20px;">
-            <p style="text-align: center; color: #666;">Sign up with:</p>
-            <div style="display: flex; flex-direction: column; gap: 10px;">
+        {% get_providers as socialaccount_providers %}
+        {% if socialaccount_providers %}
+            <div class="space-y-3 mb-8">
                 {% for provider in socialaccount_providers %}
                     <a href="{% provider_login_url provider.id process='login' %}" 
-                       class="btn" style="text-align: center; background: #444;">
-                        {{ provider.name }}
+                       class="flex items-center justify-center gap-3 w-full py-3 px-4 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-all">
+                        <span>Sign up with {{ provider.name }}</span>
                     </a>
                 {% endfor %}
             </div>
-        </div>
-        <hr>
-    {% endif %}
+            <div class="relative mb-8">
+                <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-200"></div></div>
+                <div class="relative flex justify-center text-xs uppercase"><span class="bg-white px-2 text-slate-400 font-bold">Or</span></div>
+            </div>
+        {% endif %}
 
-    <form class="signup" id="signup_form" method="POST" action="{% url 'account_signup' %}">
-      {% csrf_token %}
-      {{ form.as_p }}
-      <button class="btn" type="submit" style="width: 100%; background: #28a745;">Sign Up</button>
-    </form>
-    
-    <p style="margin-top: 20px; text-align: center;">
-        Already have an account? <a href="{% url 'account_login' %}">Log In</a>.
-    </p>
+        <form class="signup space-y-4" id="signup_form" method="POST" action="{% url 'account_signup' %}">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl transition-all shadow-lg hover:shadow-indigo-500/20 active:scale-95" type="submit">
+                Create Account
+            </button>
+        </form>
+        
+        <p class="mt-8 text-center text-sm text-slate-500">
+            Already have an account? <a href="{% url 'account_login' %}" class="font-bold text-indigo-600 hover:text-indigo-700 transition">Log In</a>.
+        </p>
+    </div>
 </div>
+
+<script>
+    // Style Django Form Inputs Automatically
+    document.addEventListener("DOMContentLoaded", function() {
+        document.querySelectorAll('input').forEach(input => {
+            if (input.type !== 'checkbox' && input.type !== 'submit') {
+                input.className = "w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition";
+            }
+        });
+        document.querySelectorAll('p').forEach(p => p.className = "space-y-1");
+    });
+</script>
 {% endblock %}

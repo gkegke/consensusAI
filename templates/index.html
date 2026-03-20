@@ -1,27 +1,157 @@
 {% extends "base.html" %}
 
-{% block title %}ConsensusAI - The AI vs Crowd Truth Tracker{% endblock %}
+{% block title %}ConsensusAI | AI vs Crowd Truth Tracker{% endblock %}
 
 {% block content %}
-<div class="hero" style="text-align: center; margin-bottom: 40px; padding: 40px; background: #f8f9fa; border-radius: 8px;">
-    <h1>Welcome to ConsensusAI</h1>
-    <p>Predict the future. See how your views align with the Crowd and cutting-edge AI.</p>
-</div>
+<!-- High-Impact Hero Section -->
+<section class="relative bg-dark pt-20 pb-12 overflow-hidden">
+    <!-- Animated Ambient Glows -->
+    <div class="absolute top-0 left-1/4 w-96 h-96 bg-indigo-600/20 rounded-full blur-[120px] animate-pulse"></div>
+    <div class="absolute bottom-0 right-1/4 w-96 h-96 bg-sky-500/10 rounded-full blur-[120px] animate-pulse delay-1000"></div>
 
-<h2>Trending Questions</h2>
-<div class="question-feed" style="display: flex; flex-direction: column; gap: 20px;">
-    {% for question in questions %}
-        <div class="question-card" style="padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
-            <h3><a href="{% url 'question_detail' question.slug %}" style="text-decoration: none; color: #333;">{{ question.text }}</a></h3>
-            <p style="color: #666; font-size: 0.9em;">
-                Type: <strong>{{ question.get_question_type_display }}</strong> | 
-                Status: <strong>{{ question.get_status_display }}</strong>
+    <div class="max-w-7xl mx-auto px-4 relative z-10">
+        <div class="text-center max-w-4xl mx-auto">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 mb-8 animate-fade-in">
+                <span class="relative flex h-2 w-2">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+                </span>
+                <span class="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-300">New AI Models Orchestrated Hourly</span>
+            </div>
+            
+            <h1 class="text-5xl md:text-7xl font-extrabold text-white tracking-tightest leading-[1.1] mb-8">
+                Predict the <span class="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-sky-400 to-emerald-400">Unknowable.</span><br>
+                Track the <span class="underline decoration-indigo-500/50 underline-offset-8">Truth.</span>
+            </h1>
+            
+            <p class="text-lg md:text-xl text-slate-400 font-light leading-relaxed mb-12 max-w-2xl mx-auto">
+                Lock in your stance. Unlock how the global crowd and frontier AI models visualize the path forward.
             </p>
-            <p>{{ question.context|truncatewords:20 }}</p>
-            <a href="{% url 'question_detail' question.slug %}" class="btn" style="background: #007bff;">Vote to Reveal Consensus</a>
+            
+            <div class="flex flex-col sm:flex-row gap-6 justify-center hidden">
+                <a href="#trending" class="px-10 py-4 bg-white text-dark font-black rounded-full hover:bg-indigo-50 transition-all shadow-2xl shadow-indigo-500/20 active:scale-95 text-sm uppercase tracking-widest">
+                    Start Predicting
+                </a>
+                <a href="{% url 'proposal_feed' %}" class="px-10 py-4 bg-transparent border border-slate-700 text-white font-bold rounded-full hover:border-indigo-400 transition-all text-sm uppercase tracking-widest">
+                    View Proposals
+                </a>
+            </div>
         </div>
-    {% empty %}
-        <p>No active questions at the moment. Check back later!</p>
-    {% endfor %}
-</div>
+    </div>
+</section>
+
+<!-- Discovery Hub: Featured Spotlight -->
+<section class="max-w-7xl mx-auto px-4 -mt-16 relative z-20">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {% for q in featured_questions %}
+        <div class="lg:col-span-2 group relative bg-white rounded-3xl p-8 md:p-12 shadow-2xl border border-slate-100 hover:border-indigo-200 transition-all overflow-hidden isolate">
+            <div class="absolute top-0 right-0 p-8">
+                <span class="text-xs font-black text-indigo-500 uppercase tracking-widest bg-indigo-50 px-3 py-1 rounded-lg">Featured Analysis</span>
+            </div>
+            <div class="relative z-10 max-w-xl">
+                <h2 class="text-3xl md:text-4xl font-black text-slate-900 mb-6 group-hover:text-indigo-600 transition">
+                    <a href="{% url 'question_detail' q.slug %}">{{ q.text }}</a>
+                </h2>
+                <p class="text-slate-500 text-lg leading-relaxed mb-8 line-clamp-3">{{ q.context }}</p>
+                <div class="flex items-center gap-6">
+                    <a href="{% url 'question_detail' q.slug %}" class="inline-flex items-center gap-2 font-extrabold text-indigo-600 hover:gap-4 transition-all uppercase tracking-widest text-xs">
+                        Enter Stance <span class="text-xl">→</span>
+                    </a>
+                    <div class="h-4 w-px bg-slate-200"></div>
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">{{ q.get_question_type_display }}</span>
+                </div>
+            </div>
+            <!-- Decorative Background Element -->
+            <div class="absolute -bottom-12 -right-12 w-64 h-64 bg-slate-50 rounded-full group-hover:scale-150 transition-transform duration-1000 -z-10"></div>
+        </div>
+        {% endfor %}
+
+        <!-- Popular Tags Menu -->
+        <div class="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-800 text-white">
+            <h3 class="text-xs font-black uppercase tracking-[0.3em] text-indigo-400 mb-8 flex items-center gap-2">
+                <span class="w-2 h-2 bg-indigo-500 rounded-full"></span> Hot Topics
+            </h3>
+            <div class="flex flex-wrap gap-3">
+                {% for tag in popular_tags %}
+                    <a href="{% url 'proposal_feed' %}?tag={{ tag }}" class="px-4 py-2 bg-slate-800 border border-slate-700 rounded-xl text-sm font-bold hover:bg-indigo-600 hover:border-indigo-500 transition-all active:scale-95">
+                        #{{ tag }}
+                    </a>
+                {% endfor %}
+            </div>
+            <div class="mt-12 pt-8 border-t border-slate-800">
+                <p class="text-xs text-slate-500 font-bold leading-loose">Explore niche datasets. From #Space to #MacroEconomics, track how the models differ across domains.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Section 1: AI Consensus Results -->
+<section class="max-w-7xl mx-auto px-4 py-24 hidden">
+    <div class="flex justify-between items-end mb-12">
+        <div>
+            <h2 class="text-3xl font-black text-slate-900 tracking-tight">Recently Analyzed</h2>
+            <p class="text-slate-500 font-medium mt-1">Peek into the AI's collective brain.</p>
+        </div>
+        <div class="h-1 w-24 bg-indigo-600 rounded-full"></div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {% for q in recently_analyzed %}
+        <div class="group bg-white rounded-2xl p-6 border border-slate-200 hover:border-indigo-300 hover:shadow-xl transition-all flex flex-col h-full">
+            <div class="flex justify-between items-start mb-6">
+                <span class="text-[10px] font-black uppercase tracking-widest px-2 py-1 bg-slate-100 text-slate-500 rounded">{{ q.latest_run.created_at|timesince|slice:":3" }} ago</span>
+                <span class="text-indigo-600">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                </span>
+            </div>
+            <h3 class="text-lg font-bold text-slate-900 mb-4 flex-grow leading-snug group-hover:text-indigo-600 transition">
+                <a href="{% url 'question_detail' q.slug %}">{{ q.text }}</a>
+            </h3>
+            <div class="pt-4 border-t border-slate-50">
+                <div class="flex justify-between items-center text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    <span>AI Confidence</span>
+                    <span class="text-indigo-500">{{ q.latest_run.polarization_index }}% Var</span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- Section 2: Trending Crowd Proposals -->
+<section id="trending" class="max-w-7xl mx-auto px-4 py-24">
+    <div class="bg-indigo-600 rounded-[3rem] p-8 md:p-16 text-white overflow-hidden relative shadow-2xl">
+        <div class="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -mr-32 -mt-32"></div>
+        
+        <div class="relative z-10">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-8 mb-12">
+                <div>
+                    <h2 class="text-3xl md:text-5xl font-black tracking-tightest">Trending Proposals</h2>
+                    <p class="text-indigo-100 mt-2 font-medium">Which truth should we target next? The crowd decides.</p>
+                </div>
+                <a href="{% url 'proposal_feed' %}" class="px-8 py-3 bg-indigo-500 hover:bg-indigo-400 text-white font-bold rounded-full transition-all border border-indigo-400/50 uppercase tracking-widest text-xs">
+                    View All Proposals
+                </a>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for q in trending_proposals %}
+                <div class="bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl p-6 hover:bg-white/20 transition-all">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-[10px] font-black text-indigo-200 uppercase tracking-widest">Upvotes: {{ q.upvote_count }}</span>
+                        <span class="text-emerald-400 text-xs font-bold">▲ Hot</span>
+                    </div>
+                    <h4 class="text-lg font-bold leading-tight mb-6">
+                        <a href="{% url 'question_detail' q.slug %}" class="hover:underline">{{ q.text|truncatechars:80 }}</a>
+                    </h4>
+                    <div class="flex justify-between items-center">
+                        <span class="text-[10px] font-bold text-white/50 uppercase tracking-widest">{{ q.created_at|timesince }} ago</span>
+                        <a href="{% url 'question_detail' q.slug %}" class="text-xs font-black uppercase text-white hover:text-indigo-200 transition">Vote Now</a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</section>
 {% endblock %}
