@@ -1,31 +1,57 @@
 [
+
     {
         "api_identifier": "gemini/gemini-3.1-flash-lite-preview",
         "name": "Gemini 3.1 Flash Lite Preview",
         "developer": "Google",
         "is_active": true,
-        "tags": ["fast", "low-reasoning", "non-open-source", "usa", "big-tech"]
+        "tags": ["fast", "non-open-source", "usa", "big-tech", "frontier-lab"]
     },
     {
-        "api_identifier": "openrouter/stepfun/step-3.5-flash:free",
-        "name": "Step 3.5 Flash (Free)",
-        "developer": "StepFun",
-        "is_active": true,
-        "tags": ["fast", "free", "open-source", "china"]
+        "api_identifier": "gemini/gemini-3-flash-preview",
+        "name": "Gemini 3 Flash Preview",
+        "developer": "Google",
+        "is_active": false,
+        "tags": ["fast", "non-open-source", "usa", "big-tech", "frontier-lab"]
     },
     {
-        "api_identifier": "openrouter/arcee-ai/trinity-large-preview:free",
-        "name": "Trinity Large Preview (Free)",
-        "developer": "Arcee-AI",
-        "is_active": true,
-        "tags": ["free", "open-source", "usa"]
+        "api_identifier": "gemini/gemini-3.1-pro-preview",
+        "name": "Gemini 3.1 Pro Preview",
+        "developer": "Google",
+        "is_active": false,
+        "tags": ["deep-thinking", "non-open-source", "usa", "big-tech", "frontier-lab"]
     },
+
     {
-        "api_identifier": "openrouter/hunter-alpha",
-        "name": "Hunter Alpha",
-        "developer": "Unknown",
-        "is_active": true,
-        "tags":["free-to-test", "1T+ Parameter", "temporary"]
+        "api_identifier": "anthropic/claude-sonnet-4.6",
+        "name": "Claude Sonnet 4.6",
+        "developer": "Claude",
+        "is_active": false,
+        "tags": ["deep-thinking", "non-open-source", "usa", "big-tech", "frontier-lab"]
+    },
+
+    {
+        "api_identifier": "deepseek/deepseek-v3.2",
+        "name": "DeepSeek V3.2",
+        "developer": "DeepSeek",
+        "is_active": false,
+        "tags": ["deep-thinking", "open-source", "china", "big-tech", "frontier-lab"]
+    },
+
+    {
+        "api_identifier": "moonshotai/kimi-k2.5",
+        "name": "Kimi K2.5",
+        "developer": "MoonshotAI",
+        "is_active": false,
+        "tags": ["deep-thinking", "open-source", "china", "big-tech", "frontier-lab"]
+    },
+
+    {
+        "api_identifier": "z-ai/glm-5",
+        "name": "GLM 5",
+        "developer": "Z.ai",
+        "is_active": false,
+        "tags": ["deep-thinking", "open-source", "china", "big-tech", "frontier-lab"]
     },
     {
         "api_identifier": "z-ai/glm-4.5-air:free",
@@ -33,5 +59,21 @@
         "developer": "Z.ai",
         "is_active": true,
         "tags":["free", "china", "fast"]
+    },
+
+    {
+        "api_identifier": "minimax/minimax-m2.7",
+        "name": "MiniMax M2.7",
+        "developer": "MiniMax",
+        "is_active": false,
+        "tags": ["deep-thinking", "open-source", "china", "big-tech", "frontier-lab"]
+    },
+    {
+        "api_identifier": "minimax/minimax-m2.5:free",
+        "name": "MiniMax M2.5 (free)",
+        "developer": "MiniMax",
+        "is_active": false,
+        "tags": ["free", "china", "fast"]
     }
+
 ]
