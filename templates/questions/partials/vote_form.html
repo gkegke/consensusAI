@@ -1,74 +1,69 @@
 {% load static %}
-<div class="vote-form-container" style="max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background: white;">
-    <form method="POST" action="{% url 'question_vote' question.slug %}" id="voteForm">
-        {% csrf_token %}
+<form method="POST" action="{% url 'question_vote' question.slug %}" id="voteForm">
+    {% csrf_token %}
+    
+    {% if question.question_type != 'PREDICTIVE_CHOICE' %}
+        <!-- Slider Logic -->
+        <div class="text-center mb-6">
+            <label for="scoreInput" class="block text-sm font-medium text-slate-700 mb-4">
+                Move slider to set your confidence/stance:
+            </label>
+            <input type="range" id="scoreInput" name="score" min="0" max="100" value="50" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-primary">
+            <div class="text-4xl font-extrabold text-primary mt-4">
+                <span id="scoreDisplay">50</span>%
+            </div>
+        </div>
         
-        {% if question.question_type != 'PREDICTIVE_CHOICE' %}
-            <!-- Slider Logic (Binary/Subjective) -->
-            <div class="slider-group" style="text-align: center;">
-                <label for="scoreInput" style="display: block; font-weight: bold; margin-bottom: 15px;">
-                    {{ question.text }}
-                </label>
-                <input type="range" id="scoreInput" name="score" min="0" max="100" value="50" style="width: 100%;">
-                <div style="font-size: 2em; font-weight: bold; margin-top: 10px; color: #007bff;">
-                    <span id="scoreDisplay">50</span>%
+    {% else %}
+        <!-- Choice Logic -->
+        <div class="mb-6">
+            <p class="text-sm font-semibold text-slate-700 mb-1">Assign Probabilities:</p>
+            <p class="text-xs text-slate-500 mb-4">Assign % to top choices. Remaining total auto-assigns to "Other".</p>
+            
+            <div id="choice-list" class="space-y-3 mb-4">
+                {% for choice in question.choices %}
+                <div class="choice-row flex justify-between items-center p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                    <span class="font-medium text-slate-700 truncate mr-2">{{ choice }}</span>
+                    <input type="hidden" name="custom_names" value="{{ choice }}">
+                    <div class="flex items-center gap-1">
+                        <input type="number" name="custom_values" class="choice-input w-20 px-2 py-1 text-right border border-slate-300 rounded focus:ring-primary focus:border-primary" value="0" min="0" max="100" step="0.5">
+                        <span class="text-slate-500 font-medium">%</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="flex gap-2 mb-4">
+                <input type="text" id="newChoiceName" placeholder="Add custom option..." class="flex-1 px-3 py-2 border border-slate-300 rounded-md text-sm focus:ring-primary focus:border-primary">
+                <button type="button" id="addChoiceBtn" class="px-3 py-2 bg-slate-200 text-slate-700 font-medium rounded-md hover:bg-slate-300 transition text-sm">+ Add</button>
+            </div>
+
+            <div class="bg-blue-50 border border-blue-100 p-4 rounded-lg">
+                <div class="flex justify-between text-slate-600 mb-2">
+                    <span class="text-sm font-medium">Other (Auto-Calc):</span>
+                    <strong id="otherBalance" class="text-blue-700">100%</strong>
+                </div>
+                <div class="h-px bg-blue-200 w-full mb-2"></div>
+                <div class="flex justify-between items-center">
+                    <strong class="text-sm text-slate-800">Total Allocated:</strong>
+                    <span id="allocatedTotal" class="font-bold text-slate-800">0%</span>
                 </div>
             </div>
             
-        {% else %}
-            <!-- Fluid Multiple Choice Logic -->
-            <div class="choice-group">
-                <p style="font-weight: bold; margin-bottom: 5px;">Assign your probabilities:</p>
-                <p style="font-size: 0.85em; color: #666; margin-bottom: 15px;">Enter values for your top choices. Remaining percentage will auto-assign to "Other".</p>
-                
-                <div id="choice-list">
-                    {% for choice in question.choices %}
-                    <div class="choice-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding: 10px; background: #f8f9fa; border-radius: 4px;">
-                        <span style="flex: 1;">{{ choice }}</span>
-                        <input type="hidden" name="custom_names" value="{{ choice }}">
-                        <div style="display: flex; align-items: center; gap: 5px;">
-                            <input type="number" name="custom_values" class="choice-input" value="0" min="0" max="100" step="0.5" style="width: 70px; padding: 5px; text-align: right;">
-                            <span>%</span>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-
-                <div id="custom-choice-entry" style="margin: 20px 0; padding: 15px; border: 1px dashed #ccc; border-radius: 8px;">
-                    <div style="display: flex; gap: 10px;">
-                        <input type="text" id="newChoiceName" placeholder="Add custom option..." style="flex: 1; padding: 8px;">
-                        <button type="button" id="addChoiceBtn" class="btn" style="background: #6c757d; font-size: 0.9em;">+ Add</button>
-                    </div>
-                </div>
-
-                <div class="summary-box" style="background: #f1f3f5; padding: 15px; border-radius: 5px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; color: #495057;">
-                        <span>Other (Auto-Calculated):</span>
-                        <strong id="otherBalance" style="font-size: 1.1em;">100%</strong>
-                    </div>
-                    <hr style="border: 0; border-top: 1px solid #dee2e6; margin: 10px 0;">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <strong>Total Specific Choices:</strong>
-                        <span id="allocatedTotal" style="font-size: 1.1em; font-weight: bold;">0%</span>
-                    </div>
-                </div>
-                
-                <div id="choiceError" style="color: red; font-size: 0.9em; margin-top: 10px; display: none;"></div>
-            </div>
-        {% endif %}
-
-        {% if user.is_authenticated %}
-        <div class="reasoning-group" style="margin-top: 25px;">
-            <label for="reasoning" style="display: block; font-weight: bold; margin-bottom: 5px;">Why do you think so? (Optional)</label>
-            <textarea name="reasoning" id="reasoning" rows="3" style="width: 100%; border: 1px solid #ddd; border-radius: 4px; padding: 10px;" placeholder="Share your logic..."></textarea>
+            <div id="choiceError" class="text-red-500 text-xs font-medium mt-2 hidden"></div>
         </div>
-        {% endif %}
+    {% endif %}
 
-        <hr style="margin: 25px 0;">
-        <button type="submit" id="submitBtn" class="btn" style="width: 100%; background: #28a745; font-size: 1.1em; padding: 12px;" disabled>
-            Submit My View
-        </button>
-    </form>
-</div>
+    {% if user.is_authenticated %}
+    <div class="mb-6">
+        <label for="reasoning" class="block text-sm font-medium text-slate-700 mb-2">Private Reasoning (Optional)</label>
+        <textarea name="reasoning" id="reasoning" rows="2" class="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-primary focus:border-primary text-sm placeholder-slate-400" placeholder="Jot down your logic for future review..."></textarea>
+    </div>
+    {% endif %}
+
+    <button type="submit" id="submitBtn" class="w-full py-3 px-4 bg-primary hover:bg-blue-700 text-white font-bold rounded-lg shadow-md transition disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+        Lock Ledger Entry
+    </button>
+</form>
 
 <script src="{% static 'js/voting.js' %}"></script>

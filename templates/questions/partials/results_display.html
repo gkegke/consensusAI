@@ -1,55 +1,170 @@
-<div class="results-container">
-    <div style="background: #d4edda; color: #155724; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
-        🎉 <strong>Access Granted.</strong> Your view has been recorded.
+<div class="results-container animate-fade-in">
+    <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-lg mb-6 text-center shadow-sm">
+        <span class="font-bold">🎉 Access Granted.</span> Your view has been securely recorded in the ledger.
     </div>
 
-    <h3>Your Submission</h3>
-    <div style="padding: 20px; border: 1px solid #ccc; border-radius: 8px; margin-bottom: 30px; background: #fafafa;">
+    <!-- User Submission Summary Card -->
+    <div class="bg-white border border-slate-200 rounded-xl shadow-sm p-6 mb-8 relative overflow-hidden">
+        <div class="absolute top-0 left-0 w-1 h-full bg-primary"></div>
+        <h3 class="text-lg font-bold text-slate-800 mb-4">Your Stance</h3>
+        
         {% if user_vote %}
             {% if user_vote.score is not None %}
-                <p style="font-size: 1.3em; margin: 0;">Score/Confidence: <strong>{{ user_vote.score|stringformat:"d" }}%</strong></p>
+                <div class="text-4xl font-extrabold text-primary mb-2">{{ user_vote.score|stringformat:"d" }}%</div>
             {% elif user_vote.complex_forecast %}
-                <ul style="margin: 10px 0; padding-left: 20px;">
+                <ul class="space-y-2 mb-4">
                 {% for item in user_vote.complex_forecast %}
-                    <li style="margin-bottom: 5px;">{{ item.choice }}: <strong>{{ item.confidence }}%</strong></li>
+                    <li class="flex justify-between items-center text-sm">
+                        <span class="text-slate-600">{{ item.choice }}</span>
+                        <span class="font-bold text-slate-800">{{ item.confidence }}%</span>
+                    </li>
                 {% endfor %}
                 </ul>
             {% endif %}
 
             {% if user_vote.reasoning %}
-                <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; font-style: italic; color: #444;">
+                <div class="mt-4 pt-4 border-t border-slate-100 italic text-slate-600 text-sm">
                     "{{ user_vote.reasoning }}"
                 </div>
             {% endif %}
             
-            <p style="margin: 15px 0 0 0; font-size: 0.8em; color: #999;">Recorded on: {{ user_vote.updated_at|date:"M d, Y H:i" }} UTC</p>
+            <p class="mt-4 text-xs text-slate-400">Locked Ledger Entry: {{ user_vote.updated_at|date:"M d, Y H:i" }} UTC</p>
         {% else %}
-            <p>You bypassed the voting gate.</p>
+            <p class="text-slate-500 italic">You bypassed the voting gate (Admin/Owner Override).</p>
         {% endif %}
     </div>
 
-    <h3>Consensus Engine Results</h3>
+    <!-- AI Engine Results -->
+    <h3 class="text-xl font-bold text-slate-800 mb-4 border-b pb-2">Consensus Engine Data</h3>
+    
     {% if question.latest_run %}
-        <div style="padding: 20px; border: 2px solid #007bff; border-radius: 8px; background: #f0f7ff; margin-bottom: 20px;">
-            <h4 style="margin-top: 0; color: #007bff;">AI Synthesis</h4>
-            <p><strong>Summary:</strong> {{ question.latest_run.synthesis_summary }}</p>
-            <p><strong>Minority View:</strong> {{ question.latest_run.minority_report }}</p>
-            <div style="font-size: 0.8em; color: #666;">Polarization Index: {{ question.latest_run.polarization_index }}%</div>
+        
+        <!-- Synthesis Card -->
+        <div class="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-6 mb-8 shadow-sm">
+            <h4 class="text-sm font-extrabold text-indigo-600 uppercase tracking-wider mb-3">AI Synthesis Summary</h4>
+            <p class="text-slate-800 leading-relaxed mb-4">{{ question.latest_run.synthesis_summary }}</p>
+            
+            <div class="flex flex-col sm:flex-row gap-4 border-t border-blue-100 pt-4">
+                <div class="flex-1">
+                    <span class="block text-xs font-bold text-slate-500 uppercase">Minority Report</span>
+                    <p class="text-sm text-slate-700 mt-1">{{ question.latest_run.minority_report }}</p>
+                </div>
+                <div class="sm:w-32 bg-white rounded-lg p-3 text-center shadow-sm border border-blue-100">
+                    <span class="block text-xs text-slate-500 uppercase">Polarization</span>
+                    <span class="block text-xl font-bold text-indigo-600">{{ question.latest_run.polarization_index }}%</span>
+                </div>
+            </div>
         </div>
 
-        <h4>Individual Model Breakdown (Dev View)</h4>
-        <div style="display: grid; gap: 10px;">
-            {% for resp in question.latest_run.responses.all %}
-                <div style="padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.9em; background: white;">
-                    <strong>{{ resp.model.name }}:</strong> 
-                    {% if resp.normalized_score is not None %}{{ resp.normalized_score|stringformat:"d" }}% | {% endif %}
-                    {{ resp.summary_sentence }}
+        <!-- VISUALIZATIONS -->
+        <div class="bg-white border border-slate-200 rounded-xl p-6 mb-8 shadow-sm">
+            <h4 class="text-md font-bold text-slate-800 mb-6">Data Visualization</h4>
+            
+            {% if question.question_type == 'PREDICTIVE_CHOICE' %}
+                <!-- Chart.js Donut Chart Container -->
+                <div class="relative w-full max-w-sm mx-auto h-64">
+                    <canvas id="aiChart"></canvas>
                 </div>
-            {% endfor %}
+                
+                <!-- Extract top model's JSON string safely for JS -->
+                {% with top_ai_response=question.latest_run.responses.first %}
+                    {{ top_ai_response.complex_forecast|json_script:"forecastData" }}
+                {% endwith %}
+
+                <script>
+                    document.addEventListener("DOMContentLoaded", function() {
+                        try {
+                            const rawData = document.getElementById('forecastData');
+                            if (!rawData) return;
+                            
+                            const forecastData = JSON.parse(rawData.textContent);
+                            if (!forecastData || forecastData.length === 0) return;
+
+                            const labels = forecastData.map(item => item.choice);
+                            const data = forecastData.map(item => item.confidence);
+                            
+                            const ctx = document.getElementById('aiChart').getContext('2d');
+                            new Chart(ctx, {
+                                type: 'doughnut',
+                                data: {
+                                    labels: labels,
+                                    datasets: [{
+                                        data: data,
+                                        backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#64748b'],
+                                        borderWidth: 2,
+                                        borderColor: '#ffffff'
+                                    }]
+                                },
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    cutout: '70%',
+                                    plugins: {
+                                        legend: { position: 'right', labels: { boxWidth: 12, font: { family: 'Inter' } } }
+                                    }
+                                }
+                            });
+                        } catch (e) {
+                            console.error("Chart initialization failed:", e);
+                        }
+                    });
+                </script>
+
+            {% else %}
+                <!-- Custom CSS Comparative Bar for Sliders -->
+                {% with top_ai_response=question.latest_run.responses.first %}
+                <div class="mb-6 relative pt-8 pb-4">
+                    <div class="h-4 bg-slate-200 rounded-full w-full overflow-hidden relative shadow-inner"></div>
+                    
+                    <!-- User Marker -->
+                    {% if user_vote and user_vote.score is not None %}
+                    <div class="absolute top-0 w-1 flex flex-col items-center" style="left: {{ user_vote.score }}%; transform: translateX(-50%); z-index: 10;">
+                        <span class="text-xs font-bold text-emerald-600 mb-1 bg-white px-1 rounded shadow-sm border border-emerald-200">You</span>
+                        <div class="h-6 w-1 bg-emerald-500 rounded-full"></div>
+                    </div>
+                    {% endif %}
+
+                    <!-- AI Marker -->
+                    {% if top_ai_response.normalized_score is not None %}
+                    <div class="absolute bottom-0 w-1 flex flex-col items-center" style="left: {{ top_ai_response.normalized_score }}%; transform: translateX(-50%); z-index: 5;">
+                        <div class="h-6 w-1 bg-primary rounded-full mb-1"></div>
+                        <span class="text-xs font-bold text-primary bg-white px-1 rounded shadow-sm border border-blue-200">AI</span>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="flex justify-between text-xs text-slate-500">
+                    <span>0 (Unlikely/Disagree)</span>
+                    <span>100 (Certain/Agree)</span>
+                </div>
+                {% endwith %}
+            {% endif %}
         </div>
+
+        <!-- Dev / Individual Model Details -->
+        <details class="group bg-slate-50 border border-slate-200 rounded-lg">
+            <summary class="px-4 py-3 font-semibold text-slate-600 cursor-pointer hover:bg-slate-100 transition">
+                View Raw Model Forecasts
+            </summary>
+            <div class="p-4 border-t border-slate-200 grid gap-3 bg-white">
+                {% for resp in question.latest_run.responses.all %}
+                    <div class="text-sm p-3 border border-slate-100 rounded bg-slate-50">
+                        <div class="font-bold text-slate-800 mb-1">{{ resp.model.name }}</div>
+                        {% if resp.normalized_score is not None %}
+                            <span class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded font-bold mr-2">{{ resp.normalized_score|stringformat:"d" }}%</span>
+                        {% endif %}
+                        <span class="text-slate-600">{{ resp.summary_sentence }}</span>
+                    </div>
+                {% endfor %}
+            </div>
+        </details>
+
     {% else %}
-        <div style="padding: 40px; border: 2px dashed #ccc; border-radius: 8px; text-align: center; color: #666; background: #fafafa;">
-            <p>The AI Consensus analysis is currently being synthesized...</p>
+        <!-- Processing State -->
+        <div class="p-10 border-2 border-dashed border-slate-300 rounded-xl text-center bg-slate-50">
+            <div class="inline-block animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mb-4"></div>
+            <p class="text-slate-600 font-medium">The AI Consensus is queued or currently synthesizing...</p>
+            <p class="text-sm text-slate-400 mt-2">Check back later or track this in your dashboard.</p>
         </div>
     {% endif %}
 </div>
