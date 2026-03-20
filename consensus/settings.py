@@ -1,22 +1,38 @@
 import os
+import sys
 from pathlib import Path
 import dj_database_url
 
-# BASE_DIR is /src/
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 if os.path.isfile(os.path.join(BASE_DIR, "env.py")):
     import env
 
 SECRET_KEY = os.environ.get("SECRET_KEY")
-
 DEBUG = os.environ.get("DEBUG", "False") == "True"
+
+# Check if we are running tests
+TESTING = 'test' in sys.argv
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.herokuapp.com']
 CSRF_TRUSTED_ORIGINS = ['https://*.herokuapp.com']
 
+# --- PRODUCTION HARDENING ---
+if not DEBUG and not TESTING:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31536000  
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+    APP_NAME = os.environ.get("HEROKU_APP_NAME")
+    if APP_NAME:
+        ALLOWED_HOSTS.append(f"{APP_NAME}.herokuapp.com")
+        CSRF_TRUSTED_ORIGINS.append(f"https://{APP_NAME}.herokuapp.com")
+
 INSTALLED_APPS = [
-    # django core
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -24,21 +40,13 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sites',
-
-    # media files
     'cloudinary_storage', 
     'cloudinary',
-
-    # AllAuth Core
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
-
-    # AllAuth Providers
     'allauth.socialaccount.providers.google',
     'allauth.socialaccount.providers.microsoft',
-    
-    # main apps
     'core',
     'users',
     'questions',
@@ -57,7 +65,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-
     'allauth.account.middleware.AccountMiddleware',
 ]
 
@@ -90,14 +97,18 @@ if os.environ.get("DATABASE_URL"):
     DATABASES = {
         'default': dj_database_url.parse(os.environ.get("DATABASE_URL"))
     }
-    print("LOG: Connected to PostgreSQL database.")
 else:
-    raise Exception("CRITICAL: No DATABASE_URL found! PostgreSQL is strictly required for local and production environments.")
+    # Fallback for local testing if env not loaded
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
-# Allauth Settings
 ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
 ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_EMAIL_VERIFICATION = 'none' # Set to 'mandatory in production
+ACCOUNT_EMAIL_VERIFICATION = 'none' 
 ACCOUNT_LOGOUT_ON_GET = True
 ACCOUNT_SIGNUP_PASSWORD_ENTER_TWICE = True
 ACCOUNT_SESSION_REMEMBER = True
@@ -106,12 +117,9 @@ ACCOUNT_UNIQUE_EMAIL = True
 LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = 'home'
 
-# Static & Media Files Modern Configuration
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR / 'staticfiles')
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR / 'static'),
-]
+STATICFILES_DIRS = [os.path.join(BASE_DIR / 'static')]
 
 WHITENOISE_USE_FINDERS = True
 
@@ -130,7 +138,6 @@ USE_I18N = True
 USE_TZ = True
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Logging Configuration
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -142,22 +149,5 @@ LOGGING = {
     'root': {
         'handlers': ['console'],
         'level': 'INFO',
-    },
-    'loggers': {
-        'django': {
-            'handlers': ['console'],
-            'level': 'INFO',
-            'propagate': False,
-        },
-        'questions': {
-            'handlers': ['console'],
-            'level': 'DEBUG' if DEBUG else 'INFO',
-            'propagate': False,
-        },
-        'ai_engine': {
-            'handlers': ['console'],
-            'level': 'DEBUG' if DEBUG else 'INFO',
-            'propagate': False,
-        },
     },
 }

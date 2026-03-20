@@ -1,6 +1,7 @@
 import logging
 import traceback
 from decimal import Decimal
+from django.db.models import Q
 from concurrent.futures import ThreadPoolExecutor
 from django.core.management.base import BaseCommand
 from django.db import close_old_connections, transaction
@@ -11,24 +12,25 @@ from questions.models import Question
 logger = logging.getLogger(__name__)
 
 class Command(BaseCommand):
-    help = "Dispatches QUEUED questions to AI models safely using DB-level locking."
+    help = "Dispatches QUEUED or AUTO_POLL questions to AI models safely using DB-level locking."
 
     def add_arguments(self, parser):
         parser.add_argument('--limit', type=int, default=3)
         parser.add_argument('--dry-run', action='store_true')
 
     def handle(self, *args, **options):
-        # ATOMIC LOCKING: prevent race conditions on Heroku workers
+        # CRITICAL - Atomic lock prevents multiple dynos from double-billing APIs
         with transaction.atomic():
             qs = Question.objects.select_for_update(skip_locked=True).filter(
-                status='ACTIVE', 
-                orchestration_queued=True
+                Q(orchestration_queued=True) | Q(is_auto_poll=True),
+                status='ACTIVE'
             ).order_by('-ai_priority')[:options['limit']]
             
             targets = list(qs)
             
             if targets and not options['dry_run']:
                 target_ids = [q.id for q in targets]
+                # Reset the queue flag so they aren't picked up in the next minute
                 Question.objects.filter(id__in=target_ids).update(orchestration_queued=False)
         
         if not targets:
@@ -41,7 +43,6 @@ class Command(BaseCommand):
 
         for question in targets:
             try:
-                # Critical: Inside the loop, we process individually to ensure partial success logs
                 success, cost, msg = self.process_question(question, options['dry_run'])
                 if success:
                     total_processed += 1
@@ -50,10 +51,10 @@ class Command(BaseCommand):
                     error_details.append(f"Q: {question.slug} Failed: {msg}")
             except Exception as e:
                 err_msg = f"CRITICAL_FAILURE | {question.slug} | {str(e)}"
-                logger.error(err_msg)
+                logger.error(err_msg, exc_info=True)
                 error_details.append(err_msg)
 
-        # Log Result
+        # Log Result for Admin Audit
         status = "SUCCESS" if total_processed == len(targets) else "PARTIAL" if total_processed > 0 else "FAILURE"
         
         if not options['dry_run']:
@@ -61,12 +62,12 @@ class Command(BaseCommand):
                 task_name="orchestrate_ai",
                 status=status,
                 items_processed=total_processed,
-                log_message="\n".join(error_details) if error_details else "All tasks completed.",
+                log_message="\n".join(error_details) if error_details else "All tasks completed successfully.",
                 total_run_cost=grand_cost
             )
 
     def process_question(self, question, dry_run):
-        # 1. Model Selection (Prioritize target_models, fallback to tags)
+        # 1. Model Selection
         models_to_query = question.target_models.filter(is_active=True)
         if not models_to_query.exists():
             tags = question.model_group_tags or ['free']
@@ -82,8 +83,7 @@ class Command(BaseCommand):
         # 2. Initialize Run
         run = ConsensusRun.objects.create(question=question, status='PENDING')
         
-        # 3. Parallel Querying (IO Bound)
-        # Using ThreadPoolExecutor safely out of the DB lock zone.
+        # 3. Parallel Querying
         with ThreadPoolExecutor(max_workers=3) as executor:
             for m in models_to_query:
                 executor.submit(self.run_single_model, m, question, run)
@@ -104,7 +104,6 @@ class Command(BaseCommand):
             run.status = 'COMPLETED'
             run.total_cost += Decimal(str(synth_cost))
             run.save()
-            
             return True, run.total_cost, "Success"
         
         run.status = 'FAILED'
@@ -113,7 +112,6 @@ class Command(BaseCommand):
 
     def run_single_model(self, model_obj, question, run):
         try:
-            # Re-open connection for thread safety in Django
             close_old_connections()
             res_dict, cost = AIOrchestratorService.query_model(model_obj, question)
             if res_dict:

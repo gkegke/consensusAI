@@ -12,7 +12,7 @@ litellm.set_verbose = False
 logger = logging.getLogger(__name__)
 
 class ChoiceProbability(BaseModel):
-    choice: str = Field(..., description="The name of the outcome (Seed option or AI-discovered Dark Horse).")
+    choice: str = Field(..., description="The name of the outcome (including outcomes not in the choices given).")
     confidence: float = Field(..., ge=0, le=100, description="Probability percentage. Must sum to 100 with others.")
 
 class BaseStructuredResponse(BaseModel):
@@ -40,6 +40,7 @@ class AIOrchestratorService:
         try:
             return completion_cost(completion_obj)
         except Exception:
+            # default fallback
             return 0.0
 
     @staticmethod
@@ -54,18 +55,18 @@ class AIOrchestratorService:
         }
         schema = mapping.get(question.question_type, SliderResponse)
         
-        system_msg = "You are a world-class forecasting engine and strategic analyst."
+        system_msg = "You are a world-class un-biased forecasting engine and strategic analyst. Return strict JSON."
         
         user_prompt = f"QUESTION: {question.text}\nCONTEXT: {question.context}\n"
         
         if question.question_type == 'PREDICTIVE_CHOICE':
             seed_list = ", ".join(question.choices) if question.choices else "None provided"
             user_prompt += (
-                f"COMMUNITY SEED LIST: [{seed_list}]\n\n"
+                f"COMMUNITY NON-EXHAUSTIVE CHOICE LIST: [{seed_list}]\n\n"
                 "INSTRUCTIONS:\n"
-                "1. The Seed List may be biased, incomplete, or contain 'lazy' omissions.\n"
-                "2. Evaluate the Seed List, but DO NOT be restricted by it.\n"
-                "3. Identify and include 'Dark Horse' candidates or omitted high-probability outcomes (>1% chance).\n"
+                "1. The Choice List may be biased, incomplete, or contain 'lazy' omissions.\n"
+                "2. Evaluate the Choice List, but DO NOT be restricted by it.\n"
+                "3. Identify and include candidates or omitted high-probability outcomes (>1% chance).\n"
                 "4. Distribute 100% probability across the most likely outcomes (max 10 total - allocating the rest as Other).\n"
             )
         else:

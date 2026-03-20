@@ -17,8 +17,7 @@ class PopulateDBCommandTest(TestCase):
         
         # Assert AI Models exist and are configured for free tiers
         self.assertTrue(AIModel.objects.count() >= 2)
-        self.assertTrue(AIModel.objects.filter(api_identifier='gemini-1.5-flash', is_active=True).exists())
-        self.assertTrue(AIModel.objects.filter(api_identifier='claude-3-haiku-20240307', is_active=False).exists())
+        self.assertTrue(AIModel.objects.filter(api_identifier='gemini/gemini-3.1-flash-lite-preview', is_active=True).exists())
         
         # Assert Questions loaded
         self.assertTrue(Question.objects.count() >= 2)

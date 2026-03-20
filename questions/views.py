@@ -97,7 +97,11 @@ class UpvoteToggleView(LoginRequiredMixin, View):
             messages.success(request, "Question upvoted!")
             logger.info(f"UPVOTE_ADD | Q:{slug} | BY:{request.user.username}")
             
-        return redirect(request.META.get('HTTP_REFERER', 'proposal_feed'))
+        # Robust redirect fallback for tests and headless requests
+        referer = request.META.get('HTTP_REFERER')
+        if referer:
+            return redirect(referer)
+        return redirect('question_detail', slug=slug)
 
 class QuestionDetailView(DetailView):
     model = Question

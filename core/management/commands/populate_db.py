@@ -1,10 +1,12 @@
 from decimal import Decimal
 import json
 import logging
+import os
 from pathlib import Path
 from dateutil.parser import parse as parse_date
 from django.core.management.base import BaseCommand
 from django.conf import settings
+from django.contrib.auth.models import User
 from ai_engine.models import AIModel, ConsensusRun, AIResponse
 from questions.models import Question
 
@@ -16,6 +18,11 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         seed_dir = Path(settings.BASE_DIR) / "data" / "seed"
         
+        self.stdout.write("Checking for admin user...")
+        if not User.objects.filter(username='admin').exists():
+            User.objects.create_superuser('admin', 'admin@example.com', 'adminpass123')
+            self.stdout.write(self.style.SUCCESS("Created superuser: admin"))
+
         self.sync_models(seed_dir / "ai_models.json")
         self.sync_questions(seed_dir / "questions.json")
         self.sync_runs(seed_dir / "consensus_runs.json")
@@ -74,24 +81,22 @@ class Command(BaseCommand):
                 try:
                     q = Question.objects.get(slug=run_data['question_slug'])
                     
-                    # update_or_create to allow refreshing
                     run, created = ConsensusRun.objects.update_or_create(
                         question=q,
                         prompt_version=run_data.get('prompt_version', 'seed-data-v1'),
                         defaults={
                             'synthesis_summary': run_data.get('synthesis_summary', ''),
                             'minority_report': run_data.get('minority_report', ''),
-                            'polarization_index': run_data.get('polarization_index', 0.0)
+                            'polarization_index': run_data.get('polarization_index', 0.0),
+                            'status': 'COMPLETED'
                         }
                     )
                     
-                    # Wipe and rebuild responses to trigger post_save signals for costs
                     run.responses.all().delete()
 
                     for resp in run_data.get('responses', []):
                         model = AIModel.objects.filter(api_identifier=resp['api_identifier']).first()
                         if model:
-                            # This trigger the update_run_cost signal automatically
                             AIResponse.objects.create(
                                 run=run,
                                 model=model,
@@ -100,6 +105,10 @@ class Command(BaseCommand):
                                 complex_forecast=resp.get('complex_forecast'),
                                 cost=Decimal(str(resp.get('cost', 0)))
                             )
+                    
+                    # Ensure Question.latest_run is linked
+                    q.latest_run = run
+                    q.save()
                     
                     self.stdout.write(f"  [Run] Synced: {q.slug} (Responses: {run.responses.count()})")
                 except Question.DoesNotExist:
