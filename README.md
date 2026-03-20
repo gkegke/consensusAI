@@ -2,7 +2,9 @@
 
 Live Demo: [live preview on heroku](https://consensusai-2e915a8fa798.herokuapp.com/)
 
-[Home Page](/src/docs/site-example.png)
+![Home Page](docs/site-example.png)
+
+
 
 ConsensusAI is a crowdsourced prediction engine that pits Human Sentiment against AI Model Consensus over real-world timelines. Users can vote and aggregate their forecasts alongside major LLMs like Google's Gemini and other models found on OpenRouter's network.
 
@@ -80,4 +82,4 @@ AI was leveraged in two ways:
 1. **Software Development Process:** AI coding assistants were used to help plan the architecture, generate boilerplate, and refactor complex logic.
 2. **App Functionality:** The core application natively orchestrates AI models using the `LiteLLM` and `Instructor` libraries. A background management command (`orchestrate_ai.py`) queries multiple LLMs simultaneously, synthesizes their answers, tracks API costs, and saves structured JSON data back to our Django Postgres database.
 
-[Wireframes](/src/docs/home-wireframe.png)
+![Wireframes](docs/home-wireframe.png)
