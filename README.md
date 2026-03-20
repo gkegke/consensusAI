@@ -2,6 +2,8 @@
 
 Live Demo: [live preview on heroku](https://consensusai-2e915a8fa798.herokuapp.com/)
 
+[Home Page](/src/docs/site-example.png)
+
 ConsensusAI is a crowdsourced prediction engine that pits Human Sentiment against AI Model Consensus over real-world timelines. Users can vote and aggregate their forecasts alongside major LLMs like Google's Gemini and other models found on OpenRouter's network.
 
 ## 🎯 The Core Concept & USP
@@ -46,7 +48,7 @@ The application features full CRUD (Create, Read, Update, Delete) capabilities f
 
 ## 🎓 Fulfillment of Capstone Learning Outcomes (LO)
 
-This project was built to directly fulfill the 8 core learning outcomes of the Capstone:
+This project was built to directly fulfill the 8 core learning outcomes of the Capstone.
 
 ### LO1: Agile Methodology & Full-Stack Django
 The project was planned using the Agile MoSCoW method, dividing work into 8 distinct phases (Foundation -> Authentication -> Question Generation -> AI Orchestration, etc.). It utilizes the complete Django MVT (Model-View-Template) architecture to deliver a functional full-stack web application.
@@ -77,3 +79,5 @@ Custom Object-Oriented models drive the application. We utilize abstract base cl
 AI was leveraged in two ways:
 1. **Software Development Process:** AI coding assistants were used to help plan the architecture, generate boilerplate, and refactor complex logic.
 2. **App Functionality:** The core application natively orchestrates AI models using the `LiteLLM` and `Instructor` libraries. A background management command (`orchestrate_ai.py`) queries multiple LLMs simultaneously, synthesizes their answers, tracks API costs, and saves structured JSON data back to our Django Postgres database.
+
+[Wireframes](/src/docs/home-wireframe.png)
